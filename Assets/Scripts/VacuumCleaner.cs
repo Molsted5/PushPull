@@ -7,6 +7,7 @@ public class VacuumCleaner: MonoBehaviour {
     public float forceStrength = 10f;
     public float forceDuration = 0.5f;
     public float vacuumRadius = 5f;
+    public float vacuumLength = 2f;
     public float coneAngle = 45f;
     public float effectCooldown = 0.1f;
     public LayerMask affectedLayers;
@@ -68,7 +69,8 @@ public class VacuumCleaner: MonoBehaviour {
 
     void ApplyForce( Vector3 origin, Vector3 direction ) {
         Vector3 forceDir = direction.normalized;
-        RaycastHit[] hits = Physics.SphereCastAll( origin, vacuumRadius, forceDir, vacuumRadius * 3, affectedLayers );
+        RaycastHit[] hits = Physics.SphereCastAll( origin, vacuumRadius, forceDir, vacuumRadius * vacuumLength, affectedLayers );
+        //Debug.DrawRay( origin, direction.normalized * vacuumRadius * vacuumLength, Color.red );
 
         foreach( RaycastHit hit in hits ) {
             Vector3 dirToTarget = hit.transform.position - origin;

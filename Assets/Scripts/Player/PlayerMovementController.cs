@@ -1,9 +1,9 @@
 using UnityEngine;
 
-[RequireComponent( typeof( Rigidbody ) )]
 [RequireComponent( typeof( PlayerInputHandler ) )]
 public class PlayerMovementController: MonoBehaviour {
     public float moveSpeed = 5f;
+    public float collisionRadius = 1f;
 
     public PlayerData PlayerData;
 
@@ -16,11 +16,9 @@ public class PlayerMovementController: MonoBehaviour {
     MovementState previousMovementState = MovementState.Idle;
 
     Vector3 velocity;
-    Rigidbody rb;
     PlayerInputHandler inputHandler;
 
     void Awake() {
-        rb = GetComponent<Rigidbody>();
         inputHandler = GetComponent<PlayerInputHandler>();
     }
 
@@ -34,11 +32,11 @@ public class PlayerMovementController: MonoBehaviour {
         inputHandler.OnMoveCanceled -= StopMovement;
     }
 
-    void FixedUpdate() {
+    void Update() {
+        PlayerData.position = transform.position; // references position before moving
         if( movementState == MovementState.Moving ) {
-            rb.MovePosition( rb.position + velocity * Time.fixedDeltaTime ); // applies movement after physics step
+            transform.position += velocity * Time.deltaTime;
         }
-        PlayerData.position = rb.position; // references position before moving
     }
 
     public void HandleMoveInput( Vector2 input ) {

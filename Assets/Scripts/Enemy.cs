@@ -60,7 +60,7 @@ public class Enemy: MonoBehaviour {
             targetEntity = target.GetComponent<LivingEntity>();
 
             myCollisionRadius = GetComponent<CapsuleCollider>().radius;
-            targetCollisionRadius = target.GetComponent<CapsuleCollider>().radius;
+            targetCollisionRadius = target.GetComponent<PlayerMovementController>().collisionRadius;
         }
     }
 
