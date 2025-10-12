@@ -27,8 +27,6 @@ public class VacuumCleaner: MonoBehaviour {
             StopCoroutine( pushCoroutine );
             pushCoroutine = null;
         }
-
-        // Stop push effects here
     }
 
     public void StartPull( Transform origin ) {
@@ -43,16 +41,11 @@ public class VacuumCleaner: MonoBehaviour {
             StopCoroutine( pullCoroutine );
             pullCoroutine = null;
         }
-
-        // Stop pull effects here
     }
 
     IEnumerator PushCoroutine( Transform origin ) {
         while( true ) {
-            ApplyForce( origin.position, origin.forward );
-            
-            // Play push VFX/audio here
-            
+            ApplyForce( origin.position, origin.forward );    
             yield return new WaitForSeconds( effectCooldown );
         }
     }
@@ -60,9 +53,6 @@ public class VacuumCleaner: MonoBehaviour {
     IEnumerator PullCoroutine( Transform origin ) {
         while( true ) {
             ApplyForce( origin.position, -origin.forward );
-
-            // Play pull VFX/audio here
-
             yield return new WaitForSeconds( effectCooldown );
         }
     }

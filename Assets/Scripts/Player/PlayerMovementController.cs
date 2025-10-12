@@ -1,21 +1,23 @@
 using UnityEngine;
+using static PlayerActionController;
 
 [RequireComponent( typeof( PlayerInputHandler ) )]
 public class PlayerMovementController: MonoBehaviour {
-    public float moveSpeed = 5f;
+    public float speed = 5f;
     public float collisionRadius = 1f;
 
     public PlayerData PlayerData;
 
-    public enum MovementState {
+    enum MovementMode {
         Idle,
-        Moving
+        Walking
     }
 
-    MovementState movementState = MovementState.Idle;
-    MovementState previousMovementState = MovementState.Idle;
+    MovementMode movementState = MovementMode.Idle;
+    MovementMode previousMovementState = MovementMode.Idle;
 
     Vector3 velocity;
+    Vector3 wishDir;
     PlayerInputHandler inputHandler;
 
     void Awake() {
@@ -23,44 +25,30 @@ public class PlayerMovementController: MonoBehaviour {
     }
 
     void OnEnable() {
-        inputHandler.OnMovePerformed += HandleMoveInput;
-        inputHandler.OnMoveCanceled += StopMovement;
+        inputHandler.OnMovePerformed += InputMovementDirection;
     }
 
     void OnDisable() {
-        inputHandler.OnMovePerformed -= HandleMoveInput;
-        inputHandler.OnMoveCanceled -= StopMovement;
+        inputHandler.OnMovePerformed -= InputMovementDirection;
     }
 
     void Update() {
+        DecideMovementState();
+
         PlayerData.position = transform.position; // references position before moving
-        if( movementState == MovementState.Moving ) {
+        if( movementState == MovementMode.Walking ) {
+            velocity = wishDir * speed;
             transform.position += velocity * Time.deltaTime;
         }
     }
 
-    public void HandleMoveInput( Vector2 input ) {
-        Vector3 velocity = new Vector3( input.x, 0f, input.y ) * moveSpeed;
-        SetVelocity( velocity );
-    }
-
-    public void StartMovement(Vector3 newVelocity) {
-        velocity = Vector3.zero;
-        DecideMovementState();
-    }
-
-    public void SetVelocity( Vector3 newVelocity ) {
-        velocity = newVelocity;
-        DecideMovementState();
-    }
-
-    public void StopMovement() {
-        velocity = Vector3.zero;
-        DecideMovementState();
+    public void InputMovementDirection( Vector2 input ) {
+        wishDir = Vector3.ClampMagnitude( new Vector3( input.x, 0f, input.y ), 1f );
     }
 
     void DecideMovementState() {
-        MovementState newState = velocity.sqrMagnitude > 0.01f ? MovementState.Moving : MovementState.Idle;
+        MovementMode newState = wishDir != Vector3.zero ? MovementMode.Walking : MovementMode.Idle;
+        
         if( newState == movementState ) return;
 
         ExitMovementState( movementState );
@@ -70,19 +58,19 @@ public class PlayerMovementController: MonoBehaviour {
     }
 
     // is this helpfull?
-    void EnterMovementState( MovementState newState ) {
+    void EnterMovementState( MovementMode newState ) {
         switch( newState ) {
-            case MovementState.Moving:
+            case MovementMode.Walking:
                 Debug.Log( "Started moving" );
                 break;
-            case MovementState.Idle:
+            case MovementMode.Idle:
                 Debug.Log( "Idle" );
                 break;
         }
     }
 
-    void ExitMovementState( MovementState oldState ) {
-        if( oldState == MovementState.Moving ) {
+    void ExitMovementState( MovementMode oldState ) {
+        if( oldState == MovementMode.Walking ) {
             Debug.Log( "Stopped moving" );
         }
     }

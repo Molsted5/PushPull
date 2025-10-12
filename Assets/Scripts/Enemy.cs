@@ -48,7 +48,7 @@ public class Enemy: MonoBehaviour {
         public bool IsExpired => Time.time > timestamp + duration;
     }
 
-    Queue<MovementForce> forceQueue = new Queue<MovementForce>();
+    List<MovementForce> forces = new List<MovementForce>();
 
     void Awake() {
         pathfinder = GetComponent<NavMeshAgent>();
@@ -167,12 +167,10 @@ public class Enemy: MonoBehaviour {
             if( currentState == State.Chasing && !livingEntity.dead ) {
                 Vector3 dirToTarget = (target.position - transform.position).normalized;
                 Vector3 velocityOffset = Vector3.zero;
+                
+                forces.RemoveAll( force => force.IsExpired );
 
-                while( forceQueue.Count > 0 && forceQueue.Peek().IsExpired ) {
-                    forceQueue.Dequeue();
-                }
-
-                foreach( MovementForce force in forceQueue ) {
+                foreach( MovementForce force in forces ) {
                     velocityOffset += force.direction * force.strength;
                 }
 
@@ -190,7 +188,7 @@ public class Enemy: MonoBehaviour {
     }
 
     public void TakeForce( Vector3 direction, float strength, float duration ) {
-        forceQueue.Enqueue( new MovementForce( direction, strength, duration ) );
+        forces.Add( new MovementForce( direction, strength, duration ) );
     }
 
 }

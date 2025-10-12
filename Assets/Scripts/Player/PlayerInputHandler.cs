@@ -4,7 +4,6 @@ using System;
 
 public class PlayerInputHandler: MonoBehaviour {
     public event Action<Vector2> OnMovePerformed;
-    public event Action OnMoveCanceled;
 
     public event Action OnPushStarted;
     public event Action OnPushCanceled;
@@ -13,10 +12,6 @@ public class PlayerInputHandler: MonoBehaviour {
     public event Action OnPullCanceled;
 
     InputSystem_Actions controls;
-
-    bool leftHeld, rightHeld, upHeld, downHeld;
-    bool pushButtonHeld, pullButtonHeld;
-    float pushAnalogValue, pullAnalogValue;
 
     enum HorizontalDirection { None, Left, Right }
     enum VerticalDirection { None, Up, Down }
@@ -28,100 +23,114 @@ public class PlayerInputHandler: MonoBehaviour {
 
     void Awake() => controls = new InputSystem_Actions();
 
-    void OnEnable() {
+    private void OnEnable() {
         controls.Enable();
 
-        controls.Player.Move.performed += ctx => ResolveMovement();
-        controls.Player.Move.canceled += ctx => OnMoveCanceled?.Invoke();
+        controls.Player.MoveLeft.performed += HandleMoveLeftInput;
+        controls.Player.MoveLeft.canceled += HandleMoveLeftInput;
 
-        controls.Player.MoveLeft.performed += ctx => { leftHeld = true; lastHorizontal = HorizontalDirection.Left; ResolveMovement(); };
-        controls.Player.MoveLeft.canceled += ctx => { leftHeld = false; ResolveMovement(); };
+        controls.Player.MoveRight.performed += HandleMoveRightInput;
+        controls.Player.MoveRight.canceled += HandleMoveRightInput;
 
-        controls.Player.MoveRight.performed += ctx => { rightHeld = true; lastHorizontal = HorizontalDirection.Right; ResolveMovement(); };
-        controls.Player.MoveRight.canceled += ctx => { rightHeld = false; ResolveMovement(); };
+        controls.Player.MoveUp.performed += HandleMoveUpInput;
+        controls.Player.MoveUp.canceled += HandleMoveUpInput;
 
-        controls.Player.MoveUp.performed += ctx => { upHeld = true; lastVertical = VerticalDirection.Up; ResolveMovement(); };
-        controls.Player.MoveUp.canceled += ctx => { upHeld = false; ResolveMovement(); };
+        controls.Player.MoveDown.performed += HandleMoveDownInput;
+        controls.Player.MoveDown.canceled += HandleMoveDownInput;
 
-        controls.Player.MoveDown.performed += ctx => { downHeld = true; lastVertical = VerticalDirection.Down; ResolveMovement(); };
-        controls.Player.MoveDown.canceled += ctx => { downHeld = false; ResolveMovement(); };
+        controls.Player.Push.performed += HandlePushInput;
+        controls.Player.Push.canceled += HandlePushInput;
 
-        // Push/Pull Button
-        controls.Player.Push.performed += ctx => { pushButtonHeld = true; lastInteraction = InteractionType.Push; ResolveInteraction(); };
-        controls.Player.Push.canceled += ctx => { pushButtonHeld = false; ResolveInteraction(); };
-
-        controls.Player.Pull.performed += ctx => { pullButtonHeld = true; lastInteraction = InteractionType.Pull; ResolveInteraction(); };
-        controls.Player.Pull.canceled += ctx => { pullButtonHeld = false; ResolveInteraction(); };
-
-        // Push/Pull Analog
-        controls.Player.PushAnalog.performed += ctx => { pushAnalogValue = ctx.ReadValue<float>(); lastInteraction = InteractionType.Push; ResolveInteraction(); };
-        controls.Player.PushAnalog.canceled += ctx => { pushAnalogValue = 0f; ResolveInteraction(); };
-
-        controls.Player.PullAnalog.performed += ctx => { pullAnalogValue = ctx.ReadValue<float>(); lastInteraction = InteractionType.Pull; ResolveInteraction(); };
-        controls.Player.PullAnalog.canceled += ctx => { pullAnalogValue = 0f; ResolveInteraction(); };
+        controls.Player.Pull.performed += HandlePullInput;
+        controls.Player.Pull.canceled += HandlePullInput;
     }
 
-    void OnDisable() {
-        controls.Player.Move.performed -= ctx => ResolveMovement();
-        controls.Player.Move.canceled -= ctx => OnMoveCanceled?.Invoke();
+    private void OnDisable() {
+        controls.Player.MoveLeft.performed -= HandleMoveLeftInput;
+        controls.Player.MoveLeft.canceled -= HandleMoveLeftInput;
 
-        controls.Player.MoveLeft.performed -= ctx => { leftHeld = true; lastHorizontal = HorizontalDirection.Left; ResolveMovement(); };
-        controls.Player.MoveLeft.canceled -= ctx => { leftHeld = false; ResolveMovement(); };
+        controls.Player.MoveRight.performed -= HandleMoveRightInput;
+        controls.Player.MoveRight.canceled -= HandleMoveRightInput;
 
-        controls.Player.MoveRight.performed -= ctx => { rightHeld = true; lastHorizontal = HorizontalDirection.Right; ResolveMovement(); };
-        controls.Player.MoveRight.canceled -= ctx => { rightHeld = false; ResolveMovement(); };
+        controls.Player.MoveUp.performed -= HandleMoveUpInput;
+        controls.Player.MoveUp.canceled -= HandleMoveUpInput;
 
-        controls.Player.MoveUp.performed -= ctx => { upHeld = true; lastVertical = VerticalDirection.Up; ResolveMovement(); };
-        controls.Player.MoveUp.canceled -= ctx => { upHeld = false; ResolveMovement(); };
+        controls.Player.MoveDown.performed -= HandleMoveDownInput;
+        controls.Player.MoveDown.canceled -= HandleMoveDownInput;
 
-        controls.Player.MoveDown.performed -= ctx => { downHeld = true; lastVertical = VerticalDirection.Down; ResolveMovement(); };
-        controls.Player.MoveDown.canceled -= ctx => { downHeld = false; ResolveMovement(); };
+        controls.Player.Push.performed -= HandlePushInput;
+        controls.Player.Push.canceled -= HandlePushInput;
 
-        controls.Player.Push.performed -= ctx => { pushButtonHeld = true; lastInteraction = InteractionType.Push; ResolveInteraction(); };
-        controls.Player.Push.canceled -= ctx => { pushButtonHeld = false; ResolveInteraction(); };
-
-        controls.Player.Pull.performed -= ctx => { pullButtonHeld = true; lastInteraction = InteractionType.Pull; ResolveInteraction(); };
-        controls.Player.Pull.canceled -= ctx => { pullButtonHeld = false; ResolveInteraction(); };
-
-        controls.Player.PushAnalog.performed -= ctx => { pushAnalogValue = ctx.ReadValue<float>(); lastInteraction = InteractionType.Push; ResolveInteraction(); };
-        controls.Player.PushAnalog.canceled -= ctx => { pushAnalogValue = 0f; ResolveInteraction(); };
-
-        controls.Player.PullAnalog.performed -= ctx => { pullAnalogValue = ctx.ReadValue<float>(); lastInteraction = InteractionType.Pull; ResolveInteraction(); };
-        controls.Player.PullAnalog.canceled -= ctx => { pullAnalogValue = 0f; ResolveInteraction(); };
+        controls.Player.Pull.performed -= HandlePullInput;
+        controls.Player.Pull.canceled -= HandlePullInput;
 
         controls.Disable();
     }
 
+    // movement Handlers
+    private void HandleMoveLeftInput( InputAction.CallbackContext ctx ) {
+        lastHorizontal = HorizontalDirection.Left;
+        ResolveMovement();
+    }
+
+    private void HandleMoveRightInput( InputAction.CallbackContext ctx ) {
+        lastHorizontal = HorizontalDirection.Right;
+        ResolveMovement();
+    }
+
+    private void HandleMoveUpInput( InputAction.CallbackContext ctx ) {
+        lastVertical = VerticalDirection.Up;
+        ResolveMovement();
+    }
+
+    private void HandleMoveDownInput( InputAction.CallbackContext ctx ) {
+        lastVertical = VerticalDirection.Down;
+        ResolveMovement();
+    }
+
+    // push/pull handlers
+    private void HandlePushInput( InputAction.CallbackContext ctx ) {
+        lastInteraction = InteractionType.Push;
+        ResolveInteraction();
+    }
+
+    private void HandlePullInput( InputAction.CallbackContext ctx ) {
+        lastInteraction = InteractionType.Pull;
+        ResolveInteraction();
+    }
+
     void ResolveMovement() {
-        Vector2 analog = controls.Player.Move.ReadValue<Vector2>();
+        float left = controls.Player.MoveLeft.ReadValue<float>();
+        float right = controls.Player.MoveRight.ReadValue<float>();
+        float up = controls.Player.MoveUp.ReadValue<float>();
+        float down = controls.Player.MoveDown.ReadValue<float>();
+
         Vector2 resolved = Vector2.zero;
 
-        resolved.x = leftHeld && !rightHeld ? -1 :
-                     rightHeld && !leftHeld ? 1 :
-                     leftHeld && rightHeld ? ( lastHorizontal == HorizontalDirection.Right ? 1 : -1) :
-                     analog.x;
+        resolved.x = right > left ? right - left :
+                     left > right ? -( left - right ) :
+                     lastHorizontal == HorizontalDirection.Right ? right : -left;
 
-        resolved.y = upHeld && !downHeld ? 1 :
-                     downHeld && !upHeld ? -1 :
-                     upHeld && downHeld ? (lastVertical == VerticalDirection.Down ? -1 : 1) :
-                     analog.y;
+        resolved.y = up > down ? up - down :
+                     down > up ? -( down - up ) :
+                     lastVertical == VerticalDirection.Down ? -down : up;
 
         OnMovePerformed?.Invoke( resolved );
     }
 
     void ResolveInteraction() {
-        bool pushActive = pushButtonHeld || pushAnalogValue > 0.1f;
-        bool pullActive = pullButtonHeld || pullAnalogValue > 0.1f;
+        float pushValue = controls.Player.Push.ReadValue<float>();
+        float pullValue = controls.Player.Pull.ReadValue<float>();
 
-        if( !pushActive && !pullActive ) {
+        if( pushValue <= 0.1f && pullValue <= 0.1f ) {
             OnPushCanceled?.Invoke();
             OnPullCanceled?.Invoke();
             return;
         }
 
-        if( !pullActive )
+        if( pullValue <= 0.1f )
             OnPushStarted?.Invoke();
-        else if( !pushActive )
+        else if( pushValue <= 0.1f )
             OnPullStarted?.Invoke();
         else
             (lastInteraction == InteractionType.Pull ? OnPullStarted : OnPushStarted)?.Invoke();

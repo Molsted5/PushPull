@@ -78,10 +78,6 @@ public class PlayerActionController: MonoBehaviour {
             newState = ActionState.None;
         }
 
-        TransitionToActionState( newState );
-    }
-
-    void TransitionToActionState( ActionState newState ) {
         if( newState == actionState ) return;
 
         ExitActionState( actionState );
@@ -90,6 +86,7 @@ public class PlayerActionController: MonoBehaviour {
         actionState = newState;
     }
 
+    // play VFX/audio here
     void EnterActionState( ActionState newState ) {
         switch( newState ) {
             case ActionState.Pushing:
