@@ -3,6 +3,7 @@ using UnityEngine;
 [RequireComponent( typeof( PlayerInputHandler ) )]
 public class PlayerActionController: MonoBehaviour {
     public VacuumCleaner vacuumCleaner;
+    public VacuumCleanerVFX vacuumVFX;
     public Transform forceOrigin;
 
     public enum ActionState {
@@ -92,10 +93,12 @@ public class PlayerActionController: MonoBehaviour {
             case ActionState.Pushing:
                 Debug.Log( "Started pushing" );
                 vacuumCleaner.StartPush( forceOrigin );
+                vacuumVFX.ShowLine( forceOrigin, 5f );
                 break;
             case ActionState.Pulling:
                 Debug.Log( "Started pulling" );
                 vacuumCleaner.StartPull( forceOrigin );
+                vacuumVFX.ShowLine( forceOrigin, 5f );
                 break;
             case ActionState.None:
                 Debug.Log( "No action" );
@@ -108,10 +111,12 @@ public class PlayerActionController: MonoBehaviour {
             case ActionState.Pushing:
                 Debug.Log( "Stopped pushing" );
                 vacuumCleaner.StopPush();
+                vacuumVFX.HideLine();
                 break;
             case ActionState.Pulling:
                 Debug.Log( "Stopped pulling" );
                 vacuumCleaner.StopPull();
+                vacuumVFX.HideLine();
                 break;
         }
     }

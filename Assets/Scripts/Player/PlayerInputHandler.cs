@@ -5,6 +5,9 @@ using System;
 public class PlayerInputHandler: MonoBehaviour {
     public event Action<Vector2> OnMovePerformed;
 
+    public event Action<Vector2> OnMouseLook;
+    public event Action<Vector3> OnStickLook;
+
     public event Action OnPushStarted;
     public event Action OnPushCanceled;
 
@@ -12,6 +15,7 @@ public class PlayerInputHandler: MonoBehaviour {
     public event Action OnPullCanceled;
 
     InputSystem_Actions controls;
+    PlayerInput playerInput;
 
     enum HorizontalDirection { None, Left, Right }
     enum VerticalDirection { None, Up, Down }
@@ -21,9 +25,12 @@ public class PlayerInputHandler: MonoBehaviour {
     VerticalDirection lastVertical = VerticalDirection.None;
     InteractionType lastInteraction = InteractionType.None;
 
-    void Awake() => controls = new InputSystem_Actions();
+    void Awake() {
+        controls = new InputSystem_Actions();
+        playerInput = GetComponent<PlayerInput>();
+    } 
 
-    private void OnEnable() {
+    void OnEnable() {
         controls.Enable();
 
         controls.Player.MoveLeft.performed += HandleMoveLeftInput;
@@ -38,6 +45,9 @@ public class PlayerInputHandler: MonoBehaviour {
         controls.Player.MoveDown.performed += HandleMoveDownInput;
         controls.Player.MoveDown.canceled += HandleMoveDownInput;
 
+        controls.Player.Look.performed += HandleLookInput;
+        controls.Player.Look.canceled += HandleLookInput;
+
         controls.Player.Push.performed += HandlePushInput;
         controls.Player.Push.canceled += HandlePushInput;
 
@@ -45,7 +55,7 @@ public class PlayerInputHandler: MonoBehaviour {
         controls.Player.Pull.canceled += HandlePullInput;
     }
 
-    private void OnDisable() {
+    void OnDisable() {
         controls.Player.MoveLeft.performed -= HandleMoveLeftInput;
         controls.Player.MoveLeft.canceled -= HandleMoveLeftInput;
 
@@ -58,6 +68,9 @@ public class PlayerInputHandler: MonoBehaviour {
         controls.Player.MoveDown.performed -= HandleMoveDownInput;
         controls.Player.MoveDown.canceled -= HandleMoveDownInput;
 
+        controls.Player.Look.performed -= HandleLookInput;
+        controls.Player.Look.canceled -= HandleLookInput;
+
         controls.Player.Push.performed -= HandlePushInput;
         controls.Player.Push.canceled -= HandlePushInput;
 
@@ -68,33 +81,38 @@ public class PlayerInputHandler: MonoBehaviour {
     }
 
     // movement Handlers
-    private void HandleMoveLeftInput( InputAction.CallbackContext ctx ) {
+    void HandleMoveLeftInput( InputAction.CallbackContext ctx ) {
         lastHorizontal = HorizontalDirection.Left;
         ResolveMovement();
     }
 
-    private void HandleMoveRightInput( InputAction.CallbackContext ctx ) {
+    void HandleMoveRightInput( InputAction.CallbackContext ctx ) {
         lastHorizontal = HorizontalDirection.Right;
         ResolveMovement();
     }
 
-    private void HandleMoveUpInput( InputAction.CallbackContext ctx ) {
+    void HandleMoveUpInput( InputAction.CallbackContext ctx ) {
         lastVertical = VerticalDirection.Up;
         ResolveMovement();
     }
 
-    private void HandleMoveDownInput( InputAction.CallbackContext ctx ) {
+    void HandleMoveDownInput( InputAction.CallbackContext ctx ) {   
         lastVertical = VerticalDirection.Down;
         ResolveMovement();
     }
 
+    // look handler
+    void HandleLookInput( InputAction.CallbackContext ctx ) {
+        ResolveLook();
+    } 
+
     // push/pull handlers
-    private void HandlePushInput( InputAction.CallbackContext ctx ) {
+    void HandlePushInput( InputAction.CallbackContext ctx ) {
         lastInteraction = InteractionType.Push;
         ResolveInteraction();
     }
 
-    private void HandlePullInput( InputAction.CallbackContext ctx ) {
+    void HandlePullInput( InputAction.CallbackContext ctx ) {
         lastInteraction = InteractionType.Pull;
         ResolveInteraction();
     }
@@ -116,6 +134,21 @@ public class PlayerInputHandler: MonoBehaviour {
                      lastVertical == VerticalDirection.Down ? -down : up;
 
         OnMovePerformed?.Invoke( resolved );
+    }
+
+    void ResolveLook() {
+        Vector2 lookValue = controls.Player.Look.ReadValue<Vector2>();
+        string scheme = playerInput.currentControlScheme;
+
+        if( scheme == "Keyboard&Mouse" ) {
+            // lookValue is already screen position
+            OnMouseLook?.Invoke( lookValue );
+        }
+        else {
+            // lookValue is stick velocity
+            Vector3 velocity = new Vector3( lookValue.x, 0f, lookValue.y );
+            OnStickLook?.Invoke( velocity );
+        }
     }
 
     void ResolveInteraction() {

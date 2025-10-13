@@ -37,6 +37,7 @@ public class PlayerMovementController: MonoBehaviour {
 
         PlayerData.position = transform.position; // references position before moving
         if( movementState == MovementMode.Walking ) {
+            // call move a method from movement class later if movement gets complicated
             velocity = wishDir * speed;
             transform.position += velocity * Time.deltaTime;
         }
@@ -57,7 +58,7 @@ public class PlayerMovementController: MonoBehaviour {
         movementState = newState;
     }
 
-    // is this helpfull?
+    // start/stop effect coroutines or methods
     void EnterMovementState( MovementMode newState ) {
         switch( newState ) {
             case MovementMode.Walking:
