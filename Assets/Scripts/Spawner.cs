@@ -5,7 +5,17 @@ using UnityEngine;
 public class Spawner: MonoBehaviour {
     public bool devMode;
 
-    public Wave[] waves;
+    //
+    public bool infinite;
+    public int enemyCount;
+    public float timeBetweenSpawns;
+
+    public float moveSpeed;
+    public int hitsToKillPlayer;
+    public float enemyHealth;
+    public Color skinColor;
+    //
+
     public Enemy enemy;
 
     public event System.Action<int> OnNewWave;
@@ -15,7 +25,7 @@ public class Spawner: MonoBehaviour {
     LivingEntity playerEntity;
     Transform playerTransform;
 
-    Wave currentWave;
+    //Wave currentWave;
     int currentWaveNumber;
 
     int enemiesRemainingToSpawn;
@@ -42,7 +52,7 @@ public class Spawner: MonoBehaviour {
         playerEntity.OnDeath += OnPlayerDeath;
 
         //map = FindAnyObjectByType<MapGenerator>();
-        NextWave();
+        //NextWave();
     }
 
     void Update() {
@@ -54,9 +64,9 @@ public class Spawner: MonoBehaviour {
                 campPositionOld = playerTransform.position;
             }
 
-            if( (enemiesRemainingToSpawn > 0 || currentWave.infinite) && Time.time > nextSpawnTime ) {
+            if( (enemiesRemainingToSpawn > 0 || infinite) && Time.time > nextSpawnTime ) {
                 enemiesRemainingToSpawn--;
-                nextSpawnTime = Time.time + currentWave.timeBetweenSpawns;
+                nextSpawnTime = Time.time + timeBetweenSpawns;
 
                 spawnEnemyCoroutine = StartCoroutine( SpawnEnemy() );
             }
@@ -72,7 +82,7 @@ public class Spawner: MonoBehaviour {
                 foreach( Enemy enemy in FindObjectsByType<Enemy>( FindObjectsSortMode.None ) ) {
                     GameObject.Destroy( enemy.gameObject );
                 }
-                NextWave();
+                //NextWave();
             }
 
         }
@@ -105,7 +115,7 @@ public class Spawner: MonoBehaviour {
 
         Enemy spawnedEnemy = Instantiate( enemy, randomPos, Quaternion.identity ) as Enemy;
         spawnedEnemy.livingEntity.OnDeath += OnEnemyDeath;
-        spawnedEnemy.SetCharacteristics( currentWave.moveSpeed, currentWave.hitsToKillPlayer, currentWave.enemyHealth, currentWave.skinColor );
+        spawnedEnemy.SetCharacteristics( moveSpeed, hitsToKillPlayer, enemyHealth, skinColor );
 
         spawnEnemyCoroutine = null;
     }
@@ -117,39 +127,27 @@ public class Spawner: MonoBehaviour {
     void OnEnemyDeath( ) {
         enemiesRemainingAlive--;
 
-        if( enemiesRemainingAlive == 0 ) {
-            NextWave();
-        }
-    }
-
-    void NextWave() {
-        //if( currentWaveNumber > 0 ) {
-        //    AudioManager.Instance.PlaySound2D( "Level Complete" );
+        //if( enemiesRemainingAlive == 0 ) {
+        //    NextWave();
         //}
-
-        currentWaveNumber++;
-
-        if( currentWaveNumber - 1 < waves.Length ) {
-            currentWave = waves[currentWaveNumber - 1];
-
-            enemiesRemainingToSpawn = currentWave.enemyCount;
-            enemiesRemainingAlive = enemiesRemainingToSpawn;
-
-            if( OnNewWave != null ) {
-                OnNewWave( currentWaveNumber );
-            }
-        }
     }
 
-    [System.Serializable]
-    public class Wave {
-        public bool infinite;
-        public int enemyCount;
-        public float timeBetweenSpawns;
+    //void NextWave() {
+    //    //if( currentWaveNumber > 0 ) {
+    //    //    AudioManager.Instance.PlaySound2D( "Level Complete" );
+    //    //}
 
-        public float moveSpeed;
-        public int hitsToKillPlayer;
-        public float enemyHealth;
-        public Color skinColor;
-    }
+    //    currentWaveNumber++;
+
+    //    if( currentWaveNumber - 1 < waves.Length ) {
+    //        currentWave = waves[currentWaveNumber - 1];
+
+    //        enemiesRemainingToSpawn = enemyCount;
+    //        enemiesRemainingAlive = enemiesRemainingToSpawn;
+
+    //        if( OnNewWave != null ) {
+    //            OnNewWave( currentWaveNumber );
+    //        }
+    //    }
+    //}
 }
