@@ -15,6 +15,9 @@ public class Spawner: MonoBehaviour {
     public float enemyHealth;
     public Color skinColor;
     //
+    int wavesLength = 1;
+    int currentWave;
+    //
 
     public Enemy enemy;
 
@@ -52,7 +55,7 @@ public class Spawner: MonoBehaviour {
         playerEntity.OnDeath += OnPlayerDeath;
 
         //map = FindAnyObjectByType<MapGenerator>();
-        //NextWave();
+        NextWave();
     }
 
     void Update() {
@@ -127,27 +130,37 @@ public class Spawner: MonoBehaviour {
     void OnEnemyDeath( ) {
         enemiesRemainingAlive--;
 
-        //if( enemiesRemainingAlive == 0 ) {
-        //    NextWave();
-        //}
+        if( enemiesRemainingAlive == 0 ) {
+            NextWave();
+        }
     }
 
-    //void NextWave() {
-    //    //if( currentWaveNumber > 0 ) {
-    //    //    AudioManager.Instance.PlaySound2D( "Level Complete" );
-    //    //}
+    void NextWave() {
+        //if( currentWaveNumber > 0 ) {
+        //    AudioManager.Instance.PlaySound2D( "Level Complete" );
+        //}
 
-    //    currentWaveNumber++;
+        currentWaveNumber++;
 
-    //    if( currentWaveNumber - 1 < waves.Length ) {
-    //        currentWave = waves[currentWaveNumber - 1];
+        if( currentWaveNumber - 1 < wavesLength ) {
+            currentWave = 0;
 
-    //        enemiesRemainingToSpawn = enemyCount;
-    //        enemiesRemainingAlive = enemiesRemainingToSpawn;
+            enemiesRemainingToSpawn = enemyCount;
+            enemiesRemainingAlive = enemiesRemainingToSpawn;
 
-    //        if( OnNewWave != null ) {
-    //            OnNewWave( currentWaveNumber );
-    //        }
-    //    }
-    //}
+            if( OnNewWave != null ) {
+                OnNewWave( currentWaveNumber );
+            }
+        }
+        //if( currentWaveNumber - 1 < waves.Length ) {
+        //    currentWave = waves[currentWaveNumber - 1];
+
+        //    enemiesRemainingToSpawn = enemyCount;
+        //    enemiesRemainingAlive = enemiesRemainingToSpawn;
+
+        //    if( OnNewWave != null ) {
+        //        OnNewWave( currentWaveNumber );
+        //    }
+        //}
+    }
 }
