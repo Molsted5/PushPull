@@ -5,30 +5,40 @@ using UnityEngine;
 public class Spawner: MonoBehaviour {
     public bool devMode;
 
-    //
-    public bool infinite;
-    public int enemyCount;
-    public float timeBetweenSpawns;
+    public class Wave {
+        public bool infinite;
+        public int enemyCount;
+        public float timeBetweenSpawns;
 
-    public float moveSpeed;
-    public int hitsToKillPlayer;
-    public float enemyHealth;
-    public Color skinColor;
-    //
-    int wavesLength = 1;
-    int currentWave;
-    //
+        public float moveSpeed;
+        public int hitsToKillPlayer;
+        public float enemyHealth;
+        public Color skinColor;
+
+        public Wave(bool infinite, int enemyCount, float timeBetweenSpawns, float moveSpeed, int hitsToKillPlayer, float enemyHealth, Color skinColor) {
+            this.infinite = infinite;
+            this.enemyCount = enemyCount;
+            this.timeBetweenSpawns = timeBetweenSpawns;
+
+            this.moveSpeed = moveSpeed;
+            this.hitsToKillPlayer = hitsToKillPlayer;
+            this.enemyHealth = enemyHealth;
+            this.skinColor = skinColor;
+        }
+    }
+
+    public Wave[] waves;
 
     public Enemy enemy;
 
-    public event System.Action<int> OnNewWave;
+    public event Action<int> OnNewWave;
 
     public PlayerData PlayerData;
     
     LivingEntity playerEntity;
     Transform playerTransform;
 
-    //Wave currentWave;
+    Wave currentWave;
     int currentWaveNumber;
 
     int enemiesRemainingToSpawn;
@@ -45,6 +55,12 @@ public class Spawner: MonoBehaviour {
     bool isDisabled;
 
     Coroutine spawnEnemyCoroutine;
+
+    void Awake() {
+        waves = new Wave[] {
+            new Wave(true, -1, 1.8f, 2.2f, 5, 1f, Color.white)
+        };
+    }
 
     void Start() {
         playerEntity = GameObject.FindGameObjectWithTag("Player").GetComponent<LivingEntity>();
@@ -67,9 +83,9 @@ public class Spawner: MonoBehaviour {
                 campPositionOld = playerTransform.position;
             }
 
-            if( (enemiesRemainingToSpawn > 0 || infinite) && Time.time > nextSpawnTime ) {
+            if( (enemiesRemainingToSpawn > 0 || currentWave.infinite) && Time.time > nextSpawnTime ) {
                 enemiesRemainingToSpawn--;
-                nextSpawnTime = Time.time + timeBetweenSpawns;
+                nextSpawnTime = Time.time + currentWave.timeBetweenSpawns;
 
                 spawnEnemyCoroutine = StartCoroutine( SpawnEnemy() );
             }
@@ -85,7 +101,7 @@ public class Spawner: MonoBehaviour {
                 foreach( Enemy enemy in FindObjectsByType<Enemy>( FindObjectsSortMode.None ) ) {
                     GameObject.Destroy( enemy.gameObject );
                 }
-                //NextWave();
+                NextWave();
             }
 
         }
@@ -118,7 +134,7 @@ public class Spawner: MonoBehaviour {
 
         Enemy spawnedEnemy = Instantiate( enemy, randomPos, Quaternion.identity ) as Enemy;
         spawnedEnemy.livingEntity.OnDeath += OnEnemyDeath;
-        spawnedEnemy.SetCharacteristics( moveSpeed, hitsToKillPlayer, enemyHealth, skinColor );
+        spawnedEnemy.SetCharacteristics( currentWave.moveSpeed, currentWave.hitsToKillPlayer, currentWave.enemyHealth, currentWave.skinColor );
 
         spawnEnemyCoroutine = null;
     }
@@ -142,25 +158,15 @@ public class Spawner: MonoBehaviour {
 
         currentWaveNumber++;
 
-        if( currentWaveNumber - 1 < wavesLength ) {
-            currentWave = 0;
+        if( currentWaveNumber - 1 < waves.Length ) {
+            currentWave = waves[currentWaveNumber - 1];
 
-            enemiesRemainingToSpawn = enemyCount;
+            enemiesRemainingToSpawn = currentWave.enemyCount;
             enemiesRemainingAlive = enemiesRemainingToSpawn;
 
             if( OnNewWave != null ) {
                 OnNewWave( currentWaveNumber );
             }
         }
-        //if( currentWaveNumber - 1 < waves.Length ) {
-        //    currentWave = waves[currentWaveNumber - 1];
-
-        //    enemiesRemainingToSpawn = enemyCount;
-        //    enemiesRemainingAlive = enemiesRemainingToSpawn;
-
-        //    if( OnNewWave != null ) {
-        //        OnNewWave( currentWaveNumber );
-        //    }
-        //}
     }
 }
