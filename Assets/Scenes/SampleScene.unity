@@ -119,6 +119,38 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &58139086
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 58139087}
+  m_Layer: 0
+  m_Name: Effect Hold
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &58139087
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 58139086}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1639565606}
+  m_Father: {fileID: 334821415}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -270,11 +302,11 @@ PrefabInstance:
       objectReference: {fileID: 334821415}
     - target: {fileID: -5854103297786879295, guid: 2bd4669769115a44bbfcfa8d8ce2367a, type: 3}
       propertyPath: vacuumLength
-      value: 0.5
+      value: 6.5
       objectReference: {fileID: 0}
     - target: {fileID: -5854103297786879295, guid: 2bd4669769115a44bbfcfa8d8ce2367a, type: 3}
       propertyPath: vacuumRadius
-      value: 5
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: -5854103297786879295, guid: 2bd4669769115a44bbfcfa8d8ce2367a, type: 3}
       propertyPath: forceStrength
@@ -327,9 +359,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 6963690582951166817, guid: 2bd4669769115a44bbfcfa8d8ce2367a, type: 3}
+    - targetCorrespondingSourceObject: {fileID: 6051308721530184882, guid: 2bd4669769115a44bbfcfa8d8ce2367a, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1639565606}
+      addedObject: {fileID: 58139087}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 2364911713431507370, guid: 2bd4669769115a44bbfcfa8d8ce2367a, type: 3}
       insertIndex: -1
@@ -1109,12 +1141,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1639565605}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 4.7}
-  m_LocalScale: {x: 0.41758, y: 1, z: 0.7787}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 2.53}
+  m_LocalScale: {x: 0.5, y: 1, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 334821414}
+  m_Father: {fileID: 58139087}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1639565608
 MeshRenderer:

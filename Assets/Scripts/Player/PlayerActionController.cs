@@ -92,12 +92,12 @@ public class PlayerActionController: MonoBehaviour {
             case ActionState.Pushing:
                 Debug.Log( "Started pushing" );
                 vacuumCleaner.StartPush( vacuumCleaner.forceOrigin );
-                vacuumVFX.StartEffect( vacuumCleaner.forceStrength );
+                vacuumVFX.StartEffect( vacuumCleaner.vacuumLength, vacuumCleaner.vacuumRadius);
                 break;
             case ActionState.Pulling:
                 Debug.Log( "Started pulling" );
                 vacuumCleaner.StartPull( vacuumCleaner.forceOrigin );
-                vacuumVFX.StartEffect( vacuumCleaner.forceStrength );
+                vacuumVFX.StartEffect( vacuumCleaner.vacuumLength, vacuumCleaner.vacuumRadius );
                 break;
             case ActionState.None:
                 Debug.Log( "No action" );

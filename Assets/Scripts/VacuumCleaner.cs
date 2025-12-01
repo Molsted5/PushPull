@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class VacuumCleaner: MonoBehaviour {
     [Header( "Vacuum Settings" )]
-    public float forceStrength = 10f;
+    public float forceMagnitude = 10f;
     public float forceDuration = 0.5f;
     public float vacuumRadius = 5f;
     public float vacuumLength = 2f;
@@ -47,34 +47,43 @@ public class VacuumCleaner: MonoBehaviour {
 
     IEnumerator PushCoroutine( Transform origin ) {
         while( true ) {
-            ApplyForce( origin.position, origin.forward );    
-            yield return new WaitForSeconds( effectCooldown );
+            ApplyForce( origin.position, origin.forward );
+            //yield return new WaitForSeconds( effectCooldown );
+            yield return null;
         }
     }
 
     IEnumerator PullCoroutine( Transform origin ) {
         while( true ) {
             ApplyForce( origin.position, -origin.forward );
-            yield return new WaitForSeconds( effectCooldown );
+            //yield return new WaitForSeconds( effectCooldown );
+            yield return null;
         }
     }
 
     void ApplyForce( Vector3 origin, Vector3 direction ) {
         Vector3 forceDir = direction.normalized;
-        RaycastHit[] hits = Physics.SphereCastAll( origin, vacuumRadius, forceDir, vacuumLength, affectedLayers );
-        //Debug.DrawRay( origin, direction.normalized * vacuumLength, Color.red );
+        Vector3 halfExtents = new Vector3( vacuumRadius, vacuumRadius, 0.2f );
+        RaycastHit[] hits = Physics.BoxCastAll( origin, halfExtents, forceDir, transform.rotation, vacuumLength, affectedLayers );
+        //Debug.DrawRay( origin, forceDir * vacuumLength, Color.red );
 
         foreach( RaycastHit hit in hits ) {
-            Vector3 dirToTarget = (hit.transform.position - origin).normalized;
+            Vector3 dirToTarget = ( hit.transform.position - origin ).normalized;
             float angleToTarget = Vector3.Angle( forceDir, dirToTarget );
 
-            if( angleToTarget <= coneAngle / 2f ) {
-                Enemy pushableEnemy = hit.transform.GetComponent<Enemy>();
+            Enemy enemy = hit.transform.GetComponent<Enemy>();
 
-                if( pushableEnemy != null ) {
-                    pushableEnemy.TakeForce( forceDir, forceStrength, forceDuration );
-                }
+            if( enemy != null ) {
+                enemy.TakeForce( forceDir * forceMagnitude );
             }
+
+            //if( angleToTarget <= coneAngle / 2f ) {
+            //    Enemy enemy = hit.transform.GetComponent<Enemy>();
+
+            //    if( enemy != null ) {
+            //        enemy.TakeForce( forceDir, forceStrength, forceDuration );
+            //    }
+            //}
         }
     }
 

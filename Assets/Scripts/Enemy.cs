@@ -32,23 +32,7 @@ public class Enemy: MonoBehaviour {
 
     bool hasTarget;
 
-    struct MovementForce {
-        public Vector3 direction;
-        public float strength;
-        public float duration;
-        public float timestamp;
-
-        public MovementForce( Vector3 dir, float str, float dur ) {
-            direction = dir.normalized;
-            strength = str;
-            duration = dur;
-            timestamp = Time.time;
-        }
-
-        public bool IsExpired => Time.time > timestamp + duration;
-    }
-
-    List<MovementForce> forces = new List<MovementForce>();
+    List<Vector3> forces = new List<Vector3>();
 
     void Awake() {
         pathfinder = GetComponent<NavMeshAgent>();
@@ -149,7 +133,7 @@ public class Enemy: MonoBehaviour {
             }
 
             fraction += Time.deltaTime * attackSpeed;
-            float interpolation = (-fraction * fraction + fraction) * 4;
+            float interpolation = ( -fraction * fraction + fraction ) * 4;
             transform.position = Vector3.Lerp( originalPosition, attackPosition, interpolation );
 
             yield return null;
@@ -161,18 +145,15 @@ public class Enemy: MonoBehaviour {
     }
 
     IEnumerator UpdatePath() {
-        float refreshRate = 0.25f;
-
         while( hasTarget ) {
             if( currentState == State.Chasing && !livingEntity.dead ) {
-                Vector3 dirToTarget = (target.position - transform.position).normalized;
+                Vector3 dirToTarget = ( target.position - transform.position ).normalized;
                 Vector3 velocityOffset = Vector3.zero;
-                
-                forces.RemoveAll( force => force.IsExpired );
 
-                foreach( MovementForce force in forces ) {
-                    velocityOffset += force.direction * force.strength;
+                for( int i = 0; i < forces.Count; i++ ) {
+                    velocityOffset += forces[i];
                 }
+                forces.Clear();
 
                 Vector3 velocity = dirToTarget + velocityOffset;
                 Vector3 direction = velocity.normalized;
@@ -183,12 +164,12 @@ public class Enemy: MonoBehaviour {
                 pathfinder.SetDestination( position );
             }
 
-            yield return new WaitForSeconds( refreshRate );
+            yield return null;
         }
     }
 
-    public void TakeForce( Vector3 direction, float strength, float duration ) {
-        forces.Add( new MovementForce( direction, strength, duration ) );
+    public void TakeForce( Vector3 force ) {
+        forces.Add( force );
     }
 
 }
