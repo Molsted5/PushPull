@@ -4,7 +4,6 @@ using UnityEngine;
 public class PlayerActionController: MonoBehaviour {
     public VacuumCleaner vacuumCleaner;
     public VacuumCleanerVFX vacuumVFX;
-    public Transform forceOrigin;
 
     public enum ActionState {
         None,
@@ -92,13 +91,13 @@ public class PlayerActionController: MonoBehaviour {
         switch( newState ) {
             case ActionState.Pushing:
                 Debug.Log( "Started pushing" );
-                vacuumCleaner.StartPush( forceOrigin );
-                vacuumVFX.ShowLine( forceOrigin, 5f );
+                vacuumCleaner.StartPush( vacuumCleaner.forceOrigin );
+                vacuumVFX.StartEffect( vacuumCleaner.forceStrength );
                 break;
             case ActionState.Pulling:
                 Debug.Log( "Started pulling" );
-                vacuumCleaner.StartPull( forceOrigin );
-                vacuumVFX.ShowLine( forceOrigin, 5f );
+                vacuumCleaner.StartPull( vacuumCleaner.forceOrigin );
+                vacuumVFX.StartEffect( vacuumCleaner.forceStrength );
                 break;
             case ActionState.None:
                 Debug.Log( "No action" );
@@ -111,12 +110,12 @@ public class PlayerActionController: MonoBehaviour {
             case ActionState.Pushing:
                 Debug.Log( "Stopped pushing" );
                 vacuumCleaner.StopPush();
-                vacuumVFX.HideLine();
+                vacuumVFX.StopEffect();
                 break;
             case ActionState.Pulling:
                 Debug.Log( "Stopped pulling" );
                 vacuumCleaner.StopPull();
-                vacuumVFX.HideLine();
+                vacuumVFX.StopEffect();
                 break;
         }
     }

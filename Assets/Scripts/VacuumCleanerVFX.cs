@@ -1,32 +1,19 @@
+using System.Collections;
 using UnityEngine;
 
 public class VacuumCleanerVFX: MonoBehaviour {
-    [SerializeField] LineRenderer coneRenderer;
+    public GameObject effect;
 
-    Transform originTransform;
-    float length;
-    bool isActive = false;
-
-    public void ShowLine( Transform origin, float len ) {
-        originTransform = origin;
-        length = len;
-        isActive = true;
-
-        coneRenderer.enabled = true;
-        coneRenderer.positionCount = 2;
+    void Awake() {
+        effect.SetActive( false );    
     }
 
-    public void HideLine() {
-        isActive = false;
-        coneRenderer.enabled = false;
+    public void StartEffect( float strength ) {
+        effect.SetActive( true );
     }
 
-    void Update() {
-        if( !isActive || originTransform == null ) return;
-
-        Vector3 origin = originTransform.position;
-        Vector3 direction = originTransform.forward; 
-        coneRenderer.SetPosition( 0, origin );
-        coneRenderer.SetPosition( 1, origin + direction * length );
+    public void StopEffect() {
+        effect.SetActive( false );
     }
+
 }

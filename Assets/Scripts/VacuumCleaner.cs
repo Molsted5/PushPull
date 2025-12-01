@@ -12,6 +12,8 @@ public class VacuumCleaner: MonoBehaviour {
     public float effectCooldown = 0.1f;
     public LayerMask affectedLayers;
 
+    public Transform forceOrigin;
+
     Coroutine pushCoroutine;
     Coroutine pullCoroutine;
 
