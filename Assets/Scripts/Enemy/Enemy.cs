@@ -120,11 +120,11 @@ public class Enemy: MonoBehaviour {
         Vector3 attackPosition = target.position - dirToTarget * myCollisionRadius;
 
         float attackSpeed = 3;
-        float fraction = 0;
-
+        
         //skinMaterial.color = Color.red;
-        bool hasAppliedDamage = false;
 
+        bool hasAppliedDamage = false;
+        float fraction = 0;
         while( fraction <= 1 ) {
 
             if( fraction >= 0.5 && !hasAppliedDamage ) {
