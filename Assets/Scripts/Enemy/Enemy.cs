@@ -5,6 +5,7 @@ using UnityEngine.AI;
 
 [RequireComponent( typeof( NavMeshAgent ) )]
 public class Enemy: MonoBehaviour {
+    public LayerMask mask;
 
     public enum State { Idle, Chasing, Attacking };
     State currentState;
@@ -137,15 +138,9 @@ public class Enemy: MonoBehaviour {
                 Vector3 velocity = wishDirection * speed + forceOffset;
                 position = transform.position + velocity;
 
-                Vector3 vecToTarget = target.position - position;
-                Vector3 dirToTarget = vecToTarget.normalized;
-
-                Vector3 nearestColliderEdge = position + dirToTarget * myCollisionRadius;
-                Vector3 nearestTargetColliderEdge = target.position + -dirToTarget * targetCollisionRadius;
-                Vector3 colliderDifference = nearestTargetColliderEdge - nearestColliderEdge;
-
-                if( colliderDifference.magnitude < moveDistanceTreshold ) {
-                    position = nearestTargetColliderEdge + -dirToTarget * moveDistanceTreshold;
+                if( Physics.Raycast( transform.position, velocity.normalized, targetCollisionRadius + myCollisionRadius + moveDistanceTreshold, mask ) ) {
+                    position = transform.position;
+                    //Debug.DrawRay( transform.position, velocity.normalized * (targetCollisionRadius + myCollisionRadius + moveDistanceTreshold), Color.red );
                 }
 
                 pathfinder.SetDestination( position );
