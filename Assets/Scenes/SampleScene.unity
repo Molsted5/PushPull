@@ -906,7 +906,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 5
-  collisionRadius: 1
+  collisionRadius: 0.5
   PlayerData: {fileID: 11400000, guid: dac8d1483cd38214aa5de8a6eb5e2c65, type: 2}
 --- !u!114 &1573284183
 MonoBehaviour:

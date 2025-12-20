@@ -133,7 +133,7 @@ public class Spawner: MonoBehaviour {
         Vector3 randomPos = new Vector3( playerPos.x + randomCircleOffset.x, playerPos.y, playerPos.z + randomCircleOffset.y );
 
         Enemy spawnedEnemy = Instantiate( enemy, randomPos, Quaternion.identity ) as Enemy;
-        spawnedEnemy.livingEntity.OnDeath += OnEnemyDeath;
+        spawnedEnemy.myLivingEntity.OnDeath += OnEnemyDeath;
         spawnedEnemy.SetCharacteristics( currentWave.moveSpeed, currentWave.hitsToKillPlayer, currentWave.enemyHealth, currentWave.skinColor );
 
         spawnEnemyCoroutine = null;

@@ -6,7 +6,7 @@ public class LivingEntity: MonoBehaviour {
     public float health { get; set; }
     public bool dead;
 
-    public event System.Action OnDeath;
+    public event Action OnDeath;
 
     public PlayerData PlayerData;
 
@@ -29,7 +29,7 @@ public class LivingEntity: MonoBehaviour {
 
     [ContextMenu( "Self Destruct" )]
     public void Die() {
-        PlayerData.position = transform.position;
+        //PlayerData.position = transform.position;
         dead = true;
         OnDeath?.Invoke();
         GameObject.Destroy( gameObject );

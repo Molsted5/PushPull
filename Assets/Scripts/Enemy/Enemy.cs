@@ -12,19 +12,21 @@ public class Enemy: MonoBehaviour {
     //public ParticleSystem deathEffect;
     public static event System.Action OnDeathStatic;
     
-    public LivingEntity livingEntity;
+    public LivingEntity myLivingEntity;
     
     NavMeshAgent pathfinder;
     Transform target;
     LivingEntity targetEntity;
-    
+
     //Material skinMaterial;
 
     //Color originalColor;
 
-    float attackDistanceTreshold = 0.5f;
-    float timebetweenAttacks = 1;
-    float damage = 1;
+    public float speed = 1f;
+    public float moveDistanceTreshold = 0.5f;
+    public float attackDistanceTreshold = 0.5f;
+    public float timebetweenAttacks = 1f;
+    public float damage = 1f;
 
     float nextAttackTime;
     float myCollisionRadius;
@@ -38,13 +40,12 @@ public class Enemy: MonoBehaviour {
         pathfinder = GetComponent<NavMeshAgent>();
 
         if( GameObject.FindGameObjectWithTag( "Player" ) != null ) {
-            hasTarget = true;
-
             target = GameObject.FindGameObjectWithTag( "Player" ).transform;
             targetEntity = target.GetComponent<LivingEntity>();
+            targetCollisionRadius = target.GetComponent<PlayerMovementController>().collisionRadius;
+            hasTarget = true;
 
             myCollisionRadius = GetComponent<CapsuleCollider>().radius;
-            targetCollisionRadius = target.GetComponent<PlayerMovementController>().collisionRadius;
         }
     }
 
@@ -61,11 +62,11 @@ public class Enemy: MonoBehaviour {
         // Attack
         if( hasTarget ) {
             if( Time.time > nextAttackTime ) {
-                float sqrDstToTarget = (target.position - transform.position).sqrMagnitude; // c^2 instead of c (pythagoras) because its cheaper than sqrroot and its the same in a relative camparison
+                float sqrDstToTarget = (target.position - transform.position).sqrMagnitude;
                 if( sqrDstToTarget < Mathf.Pow( attackDistanceTreshold + myCollisionRadius + targetCollisionRadius, 2 ) ) {
+                    Attack();
                     nextAttackTime = Time.time + timebetweenAttacks;
                     //AudioManager.Instance.PlaySound( "Enemy Attack", transform.position );
-                    StartCoroutine( Attack() );
                 }
             }
         }
@@ -78,7 +79,7 @@ public class Enemy: MonoBehaviour {
         if( hasTarget ) {
             damage = Mathf.Ceil( targetEntity.startingHealth / hitsToKillPlayer );
         }
-        livingEntity.startingHealth = enemyHealth;
+        myLivingEntity.startingHealth = enemyHealth;
 
         //skinMaterial = GetComponent<Renderer>().material;
         //skinMaterial.color = skinColor;
@@ -87,7 +88,7 @@ public class Enemy: MonoBehaviour {
 
     public void TakeHit( float damage, Vector3 hitPoint, Vector3 hitDirection ) {
         //AudioManager.Instance.PlaySound( "Impact", transform.position );
-        if( damage >= livingEntity.health ) {
+        if( damage >= myLivingEntity.health ) {
             if( OnDeathStatic != null ) {
                 OnDeathStatic();
             }
@@ -104,7 +105,7 @@ public class Enemy: MonoBehaviour {
             //Destroy( effectInstance, particleSystem.main.duration + particleSystem.main.startLifetime.constantMax );
         }
 
-        livingEntity.TakeHit( damage, hitPoint, hitDirection );
+        myLivingEntity.TakeHit( damage, hitPoint, hitDirection );
     }
 
     void OnTargetDeath() {
@@ -112,55 +113,41 @@ public class Enemy: MonoBehaviour {
         currentState = State.Idle;
     }
 
-    IEnumerator Attack() {
-        currentState = State.Attacking;
-        pathfinder.enabled = false;
-        Vector3 originalPosition = transform.position;
-        Vector3 dirToTarget = (target.position - transform.position).normalized;
-        Vector3 attackPosition = target.position - dirToTarget * myCollisionRadius;
-
-        float attackSpeed = 3;
-        
-        //skinMaterial.color = Color.red;
-
-        bool hasAppliedDamage = false;
-        float fraction = 0;
-        while( fraction <= 1 ) {
-
-            if( fraction >= 0.5 && !hasAppliedDamage ) {
-                hasAppliedDamage = true;
-                targetEntity.TakeDamage( damage );
-            }
-
-            fraction += Time.deltaTime * attackSpeed;
-            float interpolation = ( -fraction * fraction + fraction ) * 4;
-            transform.position = Vector3.Lerp( originalPosition, attackPosition, interpolation );
-
-            yield return null;
-        }
-
-        //skinMaterial.color = originalColor;
-        currentState = State.Chasing;
-        pathfinder.enabled = true;
+    void Attack() {
+        targetEntity.TakeDamage( damage );
+        print( "Attacked" );
     }
 
     IEnumerator UpdatePath() {
         while( hasTarget ) {
-            if( currentState == State.Chasing && !livingEntity.dead ) {
-                Vector3 dirToTarget = ( target.position - transform.position ).normalized;
-                Vector3 velocityOffset = Vector3.zero;
+            if( currentState == State.Chasing && !myLivingEntity.dead ) {
+                Vector3 position;
+
+                Vector3 wishDirection = ( target.position - transform.position ).normalized;
+                Vector3 forceOffset = Vector3.zero;
 
                 for( int i = 0; i < forces.Count; i++ ) {
-                    velocityOffset += forces[i];
+                    forceOffset += forces[i];
                 }
                 forces.Clear();
 
-                Vector3 velocity = dirToTarget + velocityOffset;
-                Vector3 direction = velocity.normalized;
-                velocity = direction * Mathf.Min( velocity.magnitude, 20f );
+                //Vector3 direction = ( dirToTarget + forceOffset ).normalized;
+                //Vector3 velocity = direction * Mathf.Min( moveSpeed, 20f );
 
-                Vector3 position = transform.position + velocity;
-                //position -= (target.position - position).normalized * (myCollisionRadius + targetCollisionRadius + attackDistanceTreshold / 2);
+                Vector3 velocity = wishDirection * speed + forceOffset;
+                position = transform.position + velocity;
+
+                Vector3 vecToTarget = target.position - position;
+                Vector3 dirToTarget = vecToTarget.normalized;
+
+                Vector3 nearestColliderEdge = position + dirToTarget * myCollisionRadius;
+                Vector3 nearestTargetColliderEdge = target.position + -dirToTarget * targetCollisionRadius;
+                Vector3 colliderDifference = nearestTargetColliderEdge - nearestColliderEdge;
+
+                if( colliderDifference.magnitude < moveDistanceTreshold ) {
+                    position = nearestTargetColliderEdge + -dirToTarget * moveDistanceTreshold;
+                }
+
                 pathfinder.SetDestination( position );
             }
 

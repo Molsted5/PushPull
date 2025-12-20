@@ -62,17 +62,17 @@ public class PlayerMovementController: MonoBehaviour {
     void EnterMovementState( MovementMode newState ) {
         switch( newState ) {
             case MovementMode.Walking:
-                Debug.Log( "Started moving" );
+                //debug.log( "Started moving" );
                 break;
             case MovementMode.Idle:
-                Debug.Log( "Idle" );
+                //debug.log( "Idle" );
                 break;
         }
     }
 
     void ExitMovementState( MovementMode oldState ) {
         if( oldState == MovementMode.Walking ) {
-            Debug.Log( "Stopped moving" );
+            //debug.log( "Stopped moving" );
         }
     }
 }
