@@ -132,15 +132,11 @@ public class Enemy: MonoBehaviour {
                 }
                 forces.Clear();
 
-                //Vector3 direction = ( dirToTarget + forceOffset ).normalized;
-                //Vector3 velocity = direction * Mathf.Min( moveSpeed, 20f );
-
-                Vector3 velocity = wishDirection * speed + forceOffset;
-                position = transform.position + velocity;
-
-                if( Physics.Raycast( transform.position, velocity.normalized, targetCollisionRadius + myCollisionRadius + moveDistanceTreshold, mask ) ) {
-                    position = transform.position;
-                    //Debug.DrawRay( transform.position, velocity.normalized * (targetCollisionRadius + myCollisionRadius + moveDistanceTreshold), Color.red );
+                if( forceOffset != Vector3.zero ) {
+                    position = transform.position + forceOffset;
+                } 
+                else {
+                    position = target.position;
                 }
 
                 pathfinder.SetDestination( position );
