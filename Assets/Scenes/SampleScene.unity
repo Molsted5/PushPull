@@ -666,13 +666,12 @@ GameObject:
   - component: {fileID: 508100311}
   - component: {fileID: 508100310}
   - component: {fileID: 508100309}
-  - component: {fileID: 508100313}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!65 &508100309
 BoxCollider:
@@ -760,28 +759,12 @@ Transform:
   m_GameObject: {fileID: 508100308}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -8.03, y: 0.55, z: 2.09}
+  m_LocalPosition: {x: -8.03, y: -0.77, z: 2.09}
   m_LocalScale: {x: 0.67361, y: 3.8805, z: 7.672631}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!208 &508100313
-NavMeshObstacle:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 508100308}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Shape: 1
-  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
-  m_MoveThreshold: 0.1
-  m_Carve: 0
-  m_CarveOnlyStationary: 1
-  m_Center: {x: 0, y: 0, z: 0}
-  m_TimeToStationary: 0.5
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -875,9 +858,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3240136af630686418d764c4541ff126, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  devMode: 0
   enemy: {fileID: 6639210327716355711, guid: 04b3786d84162154888230ee006797b0, type: 3}
-  PlayerData: {fileID: 11400000, guid: dac8d1483cd38214aa5de8a6eb5e2c65, type: 2}
 --- !u!1 &1564278433
 GameObject:
   m_ObjectHideFlags: 0
@@ -1061,7 +1042,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97684ede468bb6748b4bc43e2ab49a56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingHealth: 10000
+  startingHealth: 10
   dead: 0
   PlayerData: {fileID: 11400000, guid: dac8d1483cd38214aa5de8a6eb5e2c65, type: 2}
 --- !u!114 &1573284185

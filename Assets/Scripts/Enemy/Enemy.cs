@@ -6,35 +6,26 @@ using UnityEngine.AI;
 [RequireComponent( typeof( NavMeshAgent ) )]
 public class Enemy: MonoBehaviour {
     public LayerMask mask;
+    //public ParticleSystem deathEffect;
+    public static event System.Action OnDeathStatic;
+    public LivingEntity myLivingEntity;
 
+    [HideInInspector] public float attackDistanceTreshold = 0.5f;
+    [HideInInspector] public float timebetweenAttacks = 1f;
+    [HideInInspector] public float damage = 1f;
+    
     public enum State { Idle, Chasing, Attacking };
     State currentState;
 
-    //public ParticleSystem deathEffect;
-    public static event System.Action OnDeathStatic;
-    
-    public LivingEntity myLivingEntity;
-    
     NavMeshAgent pathfinder;
     Transform target;
     LivingEntity targetEntity;
-
     //Material skinMaterial;
-
     //Color originalColor;
-
-    public float speed = 1f;
-    public float moveDistanceTreshold = 0.5f;
-    public float attackDistanceTreshold = 0.5f;
-    public float timebetweenAttacks = 1f;
-    public float damage = 1f;
-
     float nextAttackTime;
     float myCollisionRadius;
     float targetCollisionRadius;
-
     bool hasTarget;
-
     List<Vector3> forces = new List<Vector3>();
 
     void Awake() {
@@ -50,11 +41,17 @@ public class Enemy: MonoBehaviour {
         }
     }
 
+    void OnEnable() {
+        targetEntity.OnDeath += OnTargetDeath;
+    }
+
+    void OnDisable() {
+        targetEntity.OnDeath -= OnTargetDeath;
+    }
+
     void Start() {
         if( hasTarget ) {
             currentState = State.Chasing;
-            targetEntity.OnDeath += OnTargetDeath;
-
             StartCoroutine( UpdatePath() );
         }
     }
@@ -74,12 +71,11 @@ public class Enemy: MonoBehaviour {
 
     }
 
-    public void SetCharacteristics( float moveSpeed, int hitsToKillPlayer, float enemyHealth, Color skinColor ) {
+    public void SetCharacteristics( float moveSpeed, float damage, float attackDistanceTreshold, float timebetweenAttacks, float enemyHealth, Color skinColor ) {
         pathfinder.speed = moveSpeed;
-
-        if( hasTarget ) {
-            damage = Mathf.Ceil( targetEntity.startingHealth / hitsToKillPlayer );
-        }
+        this.damage = damage;
+        this.attackDistanceTreshold = attackDistanceTreshold;
+        this.timebetweenAttacks = timebetweenAttacks;
         myLivingEntity.startingHealth = enemyHealth;
 
         //skinMaterial = GetComponent<Renderer>().material;
