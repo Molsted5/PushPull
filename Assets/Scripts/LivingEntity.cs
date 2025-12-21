@@ -21,6 +21,8 @@ public class LivingEntity: MonoBehaviour {
 
     public void TakeDamage( float damage ) {
         health -= damage;
+        print( "damage " + damage );
+        print( health );
 
         if( health <= 0 && !dead ) {
             Die();

@@ -150,10 +150,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2438ec4a313b4b54e87b5b4a587ad50e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mask:
+    serializedVersion: 2
+    m_Bits: 128
   myLivingEntity: {fileID: 8637090560427044211}
-  speed: 1
-  moveDistanceTreshold: 0.5
-  attackDistanceTreshold: 0
+  attackDistanceTreshold: 0.1
   timebetweenAttacks: 1
   damage: 1
 --- !u!114 &8637090560427044211
@@ -168,6 +169,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97684ede468bb6748b4bc43e2ab49a56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingHealth: 5
+  startingHealth: 2
   dead: 0
   PlayerData: {fileID: 11400000, guid: dac8d1483cd38214aa5de8a6eb5e2c65, type: 2}
