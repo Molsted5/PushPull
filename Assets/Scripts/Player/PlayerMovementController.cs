@@ -1,5 +1,4 @@
 using UnityEngine;
-using static PlayerActionController;
 
 [RequireComponent( typeof( PlayerInputHandler ) )]
 public class PlayerMovementController: MonoBehaviour {
@@ -19,9 +18,11 @@ public class PlayerMovementController: MonoBehaviour {
     Vector3 velocity;
     Vector3 wishDir;
     PlayerInputHandler inputHandler;
+    CharacterController characterController;
 
     void Awake() {
         inputHandler = GetComponent<PlayerInputHandler>();
+        characterController = GetComponent<CharacterController>();
     }
 
     void OnEnable() {
@@ -39,7 +40,7 @@ public class PlayerMovementController: MonoBehaviour {
         if( movementState == MovementMode.Walking ) {
             // call move a method from movement class later if movement gets complicated
             velocity = wishDir * speed;
-            transform.position += velocity * Time.deltaTime;
+            characterController.Move( velocity * Time.deltaTime );
         }
     }
 
@@ -48,8 +49,15 @@ public class PlayerMovementController: MonoBehaviour {
     }
 
     void DecideMovementState() {
-        MovementMode newState = wishDir != Vector3.zero ? MovementMode.Walking : MovementMode.Idle;
-        
+        MovementMode newState;
+
+        if( wishDir != Vector3.zero ) {
+            newState = MovementMode.Walking;
+        }
+        else {
+            newState = MovementMode.Idle;
+        }
+
         if( newState == movementState ) return;
 
         ExitMovementState( movementState );
