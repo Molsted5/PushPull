@@ -8,15 +8,17 @@ public class PlayerActionController: MonoBehaviour {
     public enum ActionState {
         None,
         Pushing,
-        Pulling
+        Pulling,
+        Reloading
     }
 
     ActionState actionState = ActionState.None;
     ActionState previousActionState = ActionState.None;
-    ActionState lastActionState = ActionState.None;
+    ActionState inputActionState = ActionState.None;
 
     bool isPushingHeld = false;
     bool isPullingHeld = false;
+    bool isReloadingHeld = false;
 
     PlayerInputHandler inputHandler;
 
@@ -30,6 +32,9 @@ public class PlayerActionController: MonoBehaviour {
 
         inputHandler.OnPullStarted += OnPullStarted;
         inputHandler.OnPullCanceled += OnPullCanceled;
+
+        inputHandler.OnReloadStarted += OnReloadStarted;
+        inputHandler.OnReloadCanceled += OnReloadCanceled;
     }
 
     void OnDisable() {
@@ -38,11 +43,14 @@ public class PlayerActionController: MonoBehaviour {
 
         inputHandler.OnPullStarted -= OnPullStarted;
         inputHandler.OnPullCanceled -= OnPullCanceled;
+
+        inputHandler.OnReloadStarted -= OnReloadStarted;
+        inputHandler.OnReloadCanceled -= OnReloadCanceled;
     }
 
     public void OnPushStarted() {
         isPushingHeld = true;
-        lastActionState = ActionState.Pushing;
+        inputActionState = ActionState.Pushing;
         DecideActionState();
     }
 
@@ -53,7 +61,7 @@ public class PlayerActionController: MonoBehaviour {
 
     public void OnPullStarted() {
         isPullingHeld = true;
-        lastActionState = ActionState.Pulling;
+        inputActionState = ActionState.Pulling;
         DecideActionState();
     }
 
@@ -62,11 +70,22 @@ public class PlayerActionController: MonoBehaviour {
         DecideActionState();
     }
 
+    public void OnReloadStarted() {
+        isReloadingHeld = true;
+        inputActionState = ActionState.Reloading;
+        DecideActionState();
+    }
+
+    public void OnReloadCanceled() {
+        isReloadingHeld = false;
+        DecideActionState();
+    }
+
     void DecideActionState() {
         ActionState newState;
 
         if( isPushingHeld && isPullingHeld ) {
-            newState = lastActionState;
+            newState = inputActionState;
         }
         else if( isPushingHeld ) {
             newState = ActionState.Pushing;
@@ -99,8 +118,12 @@ public class PlayerActionController: MonoBehaviour {
                 vacuumCleaner.StartPull( vacuumCleaner.forceOrigin );
                 vacuumVFX.StartEffect( vacuumCleaner.vacuumLength, vacuumCleaner.vacuumRadius );
                 break;
+            case ActionState.Reloading:
+                Debug.Log( "Started reloading" );
+                vacuumCleaner.StartReload();
+                break;
             case ActionState.None:
-                Debug.Log( "No action" );
+                Debug.Log( "No action started" );
                 break;
         }
     }
@@ -116,6 +139,13 @@ public class PlayerActionController: MonoBehaviour {
                 Debug.Log( "Stopped pulling" );
                 vacuumCleaner.StopPull();
                 vacuumVFX.StopEffect();
+                break;
+            case ActionState.Reloading:
+                Debug.Log( "Stopped reloading" );
+                vacuumCleaner.StopReload();
+                break;
+            case ActionState.None:
+                Debug.Log( "No action stopped" );
                 break;
         }
     }

@@ -14,16 +14,17 @@ public class PlayerInputHandler: MonoBehaviour {
     public event Action OnPullStarted;
     public event Action OnPullCanceled;
 
+    public event Action OnReloadStarted;
+    public event Action OnReloadCanceled;
+
     InputSystem_Actions controls;
     PlayerInput playerInput;
 
     enum HorizontalDirection { None, Left, Right }
     enum VerticalDirection { None, Up, Down }
-    enum InteractionType { None, Push, Pull }
 
     HorizontalDirection lastHorizontal = HorizontalDirection.None;
     VerticalDirection lastVertical = VerticalDirection.None;
-    InteractionType lastInteraction = InteractionType.None;
 
     void Awake() {
         controls = new InputSystem_Actions();
@@ -53,6 +54,9 @@ public class PlayerInputHandler: MonoBehaviour {
 
         controls.Player.Pull.performed += HandlePullInput;
         controls.Player.Pull.canceled += HandlePullInput;
+
+        controls.Player.Reload.performed += HandleReloadInput;
+        controls.Player.Reload.canceled += HandleReloadInput;
     }
 
     void OnDisable() {
@@ -76,6 +80,9 @@ public class PlayerInputHandler: MonoBehaviour {
 
         controls.Player.Pull.performed -= HandlePullInput;
         controls.Player.Pull.canceled -= HandlePullInput;
+
+        controls.Player.Reload.performed -= HandleReloadInput;
+        controls.Player.Reload.canceled -= HandleReloadInput;
 
         controls.Disable();
     }
@@ -108,13 +115,28 @@ public class PlayerInputHandler: MonoBehaviour {
 
     // push/pull handlers
     void HandlePushInput( InputAction.CallbackContext ctx ) {
-        lastInteraction = InteractionType.Push;
-        ResolveInteraction();
+        float pushValue = ctx.ReadValue<float>();
+        if( pushValue < 0.1f ) {
+            OnPushCanceled?.Invoke();
+        }
+        else {
+            OnPushStarted?.Invoke();
+        }
     }
 
     void HandlePullInput( InputAction.CallbackContext ctx ) {
-        lastInteraction = InteractionType.Pull;
-        ResolveInteraction();
+        float pullValue = ctx.ReadValue<float>();
+        if( pullValue < 0.1f ) {
+            OnPullCanceled?.Invoke();
+        }
+        else {
+            OnPullStarted?.Invoke();
+        }
+    }
+
+    // reload handler
+    void HandleReloadInput( InputAction.CallbackContext ctx ) {
+        OnReloadStarted?.Invoke();
     }
 
     void ResolveMovement() {
@@ -149,23 +171,5 @@ public class PlayerInputHandler: MonoBehaviour {
             Vector3 velocity = new Vector3( lookValue.x, 0f, lookValue.y );
             OnStickLook?.Invoke( velocity );
         }
-    }
-
-    void ResolveInteraction() {
-        float pushValue = controls.Player.Push.ReadValue<float>();
-        float pullValue = controls.Player.Pull.ReadValue<float>();
-
-        if( pushValue <= 0.1f && pullValue <= 0.1f ) {
-            OnPushCanceled?.Invoke();
-            OnPullCanceled?.Invoke();
-            return;
-        }
-
-        if( pullValue <= 0.1f )
-            OnPushStarted?.Invoke();
-        else if( pushValue <= 0.1f )
-            OnPullStarted?.Invoke();
-        else
-            (lastInteraction == InteractionType.Pull ? OnPullStarted : OnPushStarted)?.Invoke();
     }
 }
