@@ -14,7 +14,7 @@ public class PlayerActionController: MonoBehaviour {
 
     ActionState actionState = ActionState.None;
     ActionState previousActionState = ActionState.None;
-    ActionState inputActionState = ActionState.None;
+    ActionState ActionStateInQuestion = ActionState.None;
 
     bool isPushingHeld = false;
     bool isPullingHeld = false;
@@ -49,60 +49,51 @@ public class PlayerActionController: MonoBehaviour {
     }
 
     public void OnPushStarted() {
-        isPushingHeld = true;
-        inputActionState = ActionState.Pushing;
+        ActionStateInQuestion = ActionState.Pushing;
         DecideActionState();
     }
 
     public void OnPushCanceled() {
-        isPushingHeld = false;
+        ActionStateInQuestion = ActionState.None;
         DecideActionState();
     }
 
     public void OnPullStarted() {
-        isPullingHeld = true;
-        inputActionState = ActionState.Pulling;
+        ActionStateInQuestion = ActionState.Pulling;
         DecideActionState();
     }
 
     public void OnPullCanceled() {
-        isPullingHeld = false;
+        ActionStateInQuestion = ActionState.None;
         DecideActionState();
     }
 
     public void OnReloadStarted() {
-        isReloadingHeld = true;
-        inputActionState = ActionState.Reloading;
+        ActionStateInQuestion = ActionState.Reloading;
         DecideActionState();
     }
 
     public void OnReloadCanceled() {
-        isReloadingHeld = false;
+        ActionStateInQuestion = ActionState.None;
         DecideActionState();
     }
 
     void DecideActionState() {
-        ActionState newState;
-
-        if( isPushingHeld && isPullingHeld ) {
-            newState = inputActionState;
+        switch( ActionStateInQuestion ) {
+            case ActionState.Pushing:
+                if( actionState == ActionState.Reloading ) {
+                    print( "Can't push.. is reloading" );
+                    break;
+                }
+                // enter pushing state and prev and state value
+                break;
+            case ActionState.Pulling:
+                break;
+            case ActionState.Reloading:
+                break;
+            case ActionState.None:
+                break;
         }
-        else if( isPushingHeld ) {
-            newState = ActionState.Pushing;
-        }
-        else if( isPullingHeld ) {
-            newState = ActionState.Pulling;
-        }
-        else {
-            newState = ActionState.None;
-        }
-
-        if( newState == actionState ) return;
-
-        ExitActionState( actionState );
-        EnterActionState( newState );
-        previousActionState = actionState;
-        actionState = newState;
     }
 
     // play VFX/audio here
