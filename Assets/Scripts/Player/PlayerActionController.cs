@@ -6,15 +6,14 @@ public class PlayerActionController: MonoBehaviour {
     public VacuumCleanerVFX vacuumVFX;
 
     public enum ActionState {
-        None,
+        Idle,
         Pushing,
         Pulling,
         Reloading
     }
 
-    ActionState actionState = ActionState.None;
-    ActionState previousActionState = ActionState.None;
-    ActionState ActionStateInQuestion = ActionState.None;
+    ActionState actionState = ActionState.Idle;
+    ActionState previousActionState = ActionState.Idle;
 
     bool isPushingHeld = false;
     bool isPullingHeld = false;
@@ -48,50 +47,57 @@ public class PlayerActionController: MonoBehaviour {
         inputHandler.OnReloadCanceled -= OnReloadCanceled;
     }
 
-    public void OnPushStarted() {
-        ActionStateInQuestion = ActionState.Pushing;
-        DecideActionState();
-    }
+    // can be extended with queues and logic if the order of inputs becomes relevant. Maybe i should go back to calling decideActionState method from here. Should input queue be handled in input class? I really dont know if update should run state or states should happen right away to events or if they should do both that and then only prepare for a state changed which happens in update.. 
+    public void OnPushStarted() { isPushingHeld = true; }
+    public void OnPushCanceled() { isPushingHeld = false; }
 
-    public void OnPushCanceled() {
-        ActionStateInQuestion = ActionState.None;
-        DecideActionState();
-    }
+    public void OnPullStarted() { isPullingHeld = true; }
+    public void OnPullCanceled() { isPullingHeld = false; }
 
-    public void OnPullStarted() {
-        ActionStateInQuestion = ActionState.Pulling;
-        DecideActionState();
-    }
-
-    public void OnPullCanceled() {
-        ActionStateInQuestion = ActionState.None;
-        DecideActionState();
-    }
-
-    public void OnReloadStarted() {
-        ActionStateInQuestion = ActionState.Reloading;
-        DecideActionState();
-    }
-
-    public void OnReloadCanceled() {
-        ActionStateInQuestion = ActionState.None;
-        DecideActionState();
-    }
+    public void OnReloadStarted() { isReloadingHeld = true; }
+    public void OnReloadCanceled() { isReloadingHeld = false; }
 
     void DecideActionState() {
-        switch( ActionStateInQuestion ) {
+        switch( actionState ) {
             case ActionState.Pushing:
                 if( actionState == ActionState.Reloading ) {
                     print( "Can't push.. is reloading" );
                     break;
                 }
-                // enter pushing state and prev and state value
+                previousActionState = actionState;
+                actionState = ActionState.Pushing;
+                ExitActionState( previousActionState );
+                EnterActionState( actionState );
                 break;
             case ActionState.Pulling:
+                if( actionState == ActionState.Reloading ) {
+                    print( "Can't pull.. is reloading" );
+                    break;
+                }
+                previousActionState = actionState;
+                actionState = ActionState.Pulling;
+                ExitActionState( previousActionState );
+                EnterActionState( actionState );
                 break;
             case ActionState.Reloading:
+                if( actionState == ActionState.Reloading ) {
+                    print( "Can't reload.. is already reloading" );
+                    break;
+                }
+                previousActionState = actionState;
+                actionState = ActionState.Pulling;
+                ExitActionState( previousActionState );
+                EnterActionState( actionState );
                 break;
-            case ActionState.None:
+            case ActionState.Idle:
+                if( actionState == ActionState.Reloading ) {
+                    print( "Can't go Idle.. is reloading" );
+                    break;
+                }
+                else if( previousActionState != ActionState.Idle && previousActionState != ActionState.Reloading ) {
+
+                }
+
                 break;
         }
     }
@@ -113,7 +119,7 @@ public class PlayerActionController: MonoBehaviour {
                 Debug.Log( "Started reloading" );
                 vacuumCleaner.StartReload();
                 break;
-            case ActionState.None:
+            case ActionState.Idle:
                 Debug.Log( "No action started" );
                 break;
         }
@@ -135,7 +141,7 @@ public class PlayerActionController: MonoBehaviour {
                 Debug.Log( "Stopped reloading" );
                 vacuumCleaner.StopReload();
                 break;
-            case ActionState.None:
+            case ActionState.Idle:
                 Debug.Log( "No action stopped" );
                 break;
         }
