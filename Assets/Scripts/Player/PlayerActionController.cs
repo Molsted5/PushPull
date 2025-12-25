@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using UnityEngine.Windows;
 
 [RequireComponent( typeof( PlayerInputHandler ) )]
 public class PlayerActionController: MonoBehaviour {
@@ -12,12 +14,28 @@ public class PlayerActionController: MonoBehaviour {
         Reloading
     }
 
+    enum InputType { 
+        None, 
+        Push,
+        Pull,
+        Reload
+    }
+
+    enum InputPhase {
+        None,
+        Started, 
+        Performed, 
+        Canceled
+    }
+
     ActionState actionState = ActionState.Idle;
     ActionState previousActionState = ActionState.Idle;
+    InputType inputType;
+    InputPhase inputPhase;
 
-    bool isPushingHeld = false;
-    bool isPullingHeld = false;
-    bool isReloadingHeld = false;
+    float pushValue;
+    float pullValue;
+    float reloadValue;
 
     PlayerInputHandler inputHandler;
 
@@ -27,9 +45,11 @@ public class PlayerActionController: MonoBehaviour {
 
     void OnEnable() {
         inputHandler.OnPushStarted += OnPushStarted;
+        inputHandler.OnPushPerformed += OnPushPerformed;
         inputHandler.OnPushCanceled += OnPushCanceled;
 
         inputHandler.OnPullStarted += OnPullStarted;
+        inputHandler.OnPullPerformed += OnPullPerformed;
         inputHandler.OnPullCanceled += OnPullCanceled;
 
         inputHandler.OnReloadStarted += OnReloadStarted;
@@ -38,46 +58,70 @@ public class PlayerActionController: MonoBehaviour {
 
     void OnDisable() {
         inputHandler.OnPushStarted -= OnPushStarted;
+        inputHandler.OnPushPerformed -= OnPushPerformed;
         inputHandler.OnPushCanceled -= OnPushCanceled;
 
         inputHandler.OnPullStarted -= OnPullStarted;
+        inputHandler.OnPullPerformed -= OnPullPerformed;
         inputHandler.OnPullCanceled -= OnPullCanceled;
 
         inputHandler.OnReloadStarted -= OnReloadStarted;
         inputHandler.OnReloadCanceled -= OnReloadCanceled;
     }
 
-    // can be extended with queues and logic if the order of inputs becomes relevant. Maybe i should go back to calling decideActionState method from here. Should input queue be handled in input class? I really dont know if update should run state or states should happen right away to events or if they should do both that and then only prepare for a state changed which happens in update.. 
-    public void OnPushStarted() { isPushingHeld = true; }
-    public void OnPushCanceled() { isPushingHeld = false; }
+    void Update() {
+        DecideActionState();
+    }
 
-    public void OnPullStarted() { isPullingHeld = true; }
-    public void OnPullCanceled() { isPullingHeld = false; }
+    // wrapper because of action<float> signature from input script
+    void OnPushStarted( float value ) { HandlePushInput( InputPhase.Started, value ); }
+    void OnPushPerformed( float value ) { HandlePushInput( InputPhase.Performed, value ); }
+    void OnPushCanceled() { HandlePushInput( InputPhase.Canceled, 0 ); }
 
-    public void OnReloadStarted() { isReloadingHeld = true; }
-    public void OnReloadCanceled() { isReloadingHeld = false; }
+    void OnPullStarted(float value) { HandlePullInput( InputPhase.Started, value ); } 
+    void OnPullPerformed(float value) { HandlePullInput( InputPhase.Performed, value ); }
+    void OnPullCanceled() { HandlePullInput( InputPhase.Canceled, 0 ); }
+
+    void OnReloadStarted() { HandleReloadInput( InputPhase.Started, 1f ); }
+    void OnReloadCanceled() { HandleReloadInput( InputPhase.Canceled, 0 ); }
+
+    void HandlePushInput( InputPhase phase, float value ) {
+        inputType = InputType.Push;
+        inputPhase = phase;
+        pushValue = value;
+    }
+
+    void HandlePullInput( InputPhase phase, float value ) {
+        inputType = InputType.Pull;
+        inputPhase = phase;
+        pullValue = value;
+    }
+
+    void HandleReloadInput( InputPhase phase, float value ) {
+        inputType = InputType.Reload;
+        inputPhase = phase;
+        reloadValue = value;
+    }
 
     void DecideActionState() {
         switch( actionState ) {
             case ActionState.Pushing:
-                if( actionState == ActionState.Reloading ) {
-                    print( "Can't push.. is reloading" );
-                    break;
+                if( inputType == InputType.Push ) {
+                    if( inputPhase == InputPhase.Canceled ) {
+                        // stop pushing
+                        // stop vfx
+                    }
+                    else if( inputPhase == InputPhase.Performed ) {
+                        // update push
+                        // perhaps update vfx
+                    }
                 }
-                previousActionState = actionState;
-                actionState = ActionState.Pushing;
-                ExitActionState( previousActionState );
-                EnterActionState( actionState );
+                if( inputType == InputType.Pull ) {
+                    // and so on
+                }
                 break;
             case ActionState.Pulling:
-                if( actionState == ActionState.Reloading ) {
-                    print( "Can't pull.. is reloading" );
-                    break;
-                }
-                previousActionState = actionState;
-                actionState = ActionState.Pulling;
-                ExitActionState( previousActionState );
-                EnterActionState( actionState );
+
                 break;
             case ActionState.Reloading:
                 if( actionState == ActionState.Reloading ) {
