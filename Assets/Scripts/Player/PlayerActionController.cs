@@ -30,7 +30,7 @@ public class PlayerActionController: MonoBehaviour {
     }
 
     ActionState actionState = ActionState.Idle;
-    ActionState previousActionState = ActionState.Idle;
+    //ActionState previousActionState = ActionState.Idle;
     InputType inputType;
     InputPhase inputPhase;
 
@@ -194,10 +194,10 @@ public class PlayerActionController: MonoBehaviour {
                     actionState = ActionState.Pushing;
                     EnterActionState( actionState );
                 }
-                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                else if( inputType == InputType.Pull && inputPhase == InputPhase.Started ) {
                     ExitActionState( actionState );
                     // maybe add ammo check
-                    actionState = ActionState.Reloading;
+                    actionState = ActionState.Pulling;
                     EnterActionState( actionState );
                 }
                 break;
