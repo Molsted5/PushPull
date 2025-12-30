@@ -51,17 +51,16 @@ public class PlayerInputHandler: MonoBehaviour {
         controls.Player.Look.performed += HandleLookInput;
         controls.Player.Look.canceled += HandleLookInput;
 
-        controls.Player.Push.started += HandlePushInput;
-        controls.Player.Push.performed += HandlePushInput;
-        controls.Player.Push.canceled += HandlePushInput;
+        controls.Player.Push.started += PushStartedInput;
+        controls.Player.Push.performed += PushPerformedInput;
+        controls.Player.Push.canceled += PushCanceledInput; 
 
-        controls.Player.Pull.started += HandlePullInput;
-        controls.Player.Pull.performed += HandlePullInput;
-        controls.Player.Pull.canceled += HandlePullInput;
+        controls.Player.Pull.started += PullStartedInput;
+        controls.Player.Pull.performed += PullPerformedInput;
+        controls.Player.Pull.canceled += PullCanceledInput;
 
-        controls.Player.Reload.started += HandleReloadInput;
-        controls.Player.Reload.performed += HandleReloadInput;
-        controls.Player.Reload.canceled += HandleReloadInput;
+        controls.Player.Reload.started += ReloadStartedInput;
+        controls.Player.Reload.canceled += ReloadCanceledInput;
     }
 
     void OnDisable() {
@@ -82,15 +81,14 @@ public class PlayerInputHandler: MonoBehaviour {
 
         controls.Player.Push.started -= PushStartedInput;
         controls.Player.Push.performed -= PushPerformedInput;
-        controls.Player.Push.canceled -= PushCancelledInput;
+        controls.Player.Push.canceled -= PushCanceledInput;
 
         controls.Player.Pull.started -= PullStartedInput;
         controls.Player.Pull.performed -= PullPerformedInput;
-        controls.Player.Pull.canceled -= PullCancelledInput;
+        controls.Player.Pull.canceled -= PullCanceledInput;
 
-        controls.Player.Reload.started -= HandleReloadInput;
-        controls.Player.Reload.performed -= HandleReloadInput;
-        controls.Player.Reload.canceled -= HandleReloadInput;
+        controls.Player.Reload.started -= ReloadStartedInput;
+        controls.Player.Reload.canceled -= ReloadCanceledInput;
 
         controls.Disable();
     }
@@ -121,25 +119,40 @@ public class PlayerInputHandler: MonoBehaviour {
         ResolveLook();
     } 
 
-    // push/pull handlers
+    // push handlers
     void PushStartedInput( InputAction.CallbackContext ctx ) { 
-        OnPushPerformed?.Invoke( ctx.ReadValue<float>() ); 
+        OnPushStarted?.Invoke( ctx.ReadValue<float>() ); 
     }
 
     void PushPerformedInput( InputAction.CallbackContext ctx ) {
         OnPushPerformed?.Invoke( ctx.ReadValue<float>() );
     }
 
-    void PushCancelledInput( InputAction.CallbackContext ctx ) {
-        OnPushPerformed?.Invoke( ctx.ReadValue<float>() );
+    void PushCanceledInput( InputAction.CallbackContext ctx ) {
+        OnPushCanceled?.Invoke();
     }
 
-    void HandlePullInput( InputAction.CallbackContext ctx ) { 
-        OnPullPerformed?.Invoke( ctx.ReadValue<float>() ); 
+    // pull handlers
+    void PullStartedInput( InputAction.CallbackContext ctx ) {
+        OnPullStarted?.Invoke( ctx.ReadValue<float>() );
     }
 
-    // reload handler
-    void HandleReloadInput( InputAction.CallbackContext ctx ) { OnReloadPerformed?.Invoke(); }
+    void PullPerformedInput( InputAction.CallbackContext ctx ) {
+        OnPullPerformed?.Invoke( ctx.ReadValue<float>() );
+    }
+
+    void PullCanceledInput( InputAction.CallbackContext ctx ) {
+        OnPullCanceled?.Invoke();
+    }
+
+    // reload handlers
+    void ReloadStartedInput( InputAction.CallbackContext ctx ) {
+        OnReloadStarted?.Invoke();
+    }
+
+    void ReloadCanceledInput( InputAction.CallbackContext ctx ) {
+        OnReloadCanceled?.Invoke();
+    }
 
     void ResolveMovement() {
         float left = controls.Player.MoveLeft.ReadValue<float>();

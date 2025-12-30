@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Windows;
 
@@ -32,6 +33,9 @@ public class PlayerActionController: MonoBehaviour {
     ActionState previousActionState = ActionState.Idle;
     InputType inputType;
     InputPhase inputPhase;
+
+    bool pushInputStarted;
+    bool pullInputStarted;
 
     float pushValue;
     float pullValue;
@@ -70,6 +74,8 @@ public class PlayerActionController: MonoBehaviour {
     }
 
     void Update() {
+        pushInputStarted = false;
+        pullInputStarted = false;
         DecideActionState();
     }
 
@@ -86,12 +92,24 @@ public class PlayerActionController: MonoBehaviour {
     void OnReloadCanceled() { HandleReloadInput( InputPhase.Canceled, 0 ); }
 
     void HandlePushInput( InputPhase phase, float value ) {
+        if( pushInputStarted && phase == InputPhase.Performed ) {
+            return;
+        }
+        if( phase == InputPhase.Started ) {
+            pushInputStarted = true;
+        }
         inputType = InputType.Push;
         inputPhase = phase;
         pushValue = value;
     }
 
     void HandlePullInput( InputPhase phase, float value ) {
+        if( pullInputStarted && phase == InputPhase.Performed ) {
+            return;
+        }
+        if( phase == InputPhase.Started ) {
+            pullInputStarted = true;
+        }
         inputType = InputType.Pull;
         inputPhase = phase;
         pullValue = value;
@@ -106,42 +124,104 @@ public class PlayerActionController: MonoBehaviour {
     void DecideActionState() {
         switch( actionState ) {
             case ActionState.Pushing:
-                if( inputType == InputType.Push ) {
-                    if( inputPhase == InputPhase.Canceled ) {
-                        // stop pushing
-                        // stop vfx
+                // add here if something should override the rest like a shoot for the next 10 seconds powerup
+
+                if( inputType == InputType.Push && inputPhase == InputPhase.Canceled ) {
+                    ExitActionState( actionState );
+                    actionState = ActionState.Idle;
+                    if( pullValue != 0 ) {
+                        // maybe add ammo check
+                        actionState = ActionState.Pulling;
                     }
-                    else if( inputPhase == InputPhase.Performed ) {
-                        // update push
-                        // perhaps update vfx
+                    else if( reloadValue != 0 ) {
+                        // maybe add ammo check
+                        actionState = ActionState.Reloading;
                     }
+                    EnterActionState( actionState );
                 }
-                if( inputType == InputType.Pull ) {
-                    // and so on
+                else if( inputType == InputType.Pull && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Pulling;
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Reloading;
+                    EnterActionState( actionState );
                 }
                 break;
             case ActionState.Pulling:
+                // add here if something should override the rest like a shoot for the next 10 seconds powerup
 
+                if( inputType == InputType.Pull && inputPhase == InputPhase.Canceled ) {
+                    ExitActionState( actionState );
+                    actionState = ActionState.Idle;
+                    if( pushValue != 0 ) {
+                        // maybe add ammo check
+                        actionState = ActionState.Pushing;
+                    }
+                    else if( reloadValue != 0 ) {
+                        // maybe add ammo check
+                        actionState = ActionState.Reloading;
+                    }
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Push && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Pushing;
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Reloading;
+                    EnterActionState( actionState );
+                }
                 break;
             case ActionState.Reloading:
-                if( actionState == ActionState.Reloading ) {
-                    print( "Can't reload.. is already reloading" );
-                    break;
+                // add here if something should override the rest like a shoot for the next 10 seconds powerup
+
+                // subscribe to reload over event from the gun and set isReloading value in this script
+                // if isReloading == false then exit action state and check other inputValues for new state
+
+                // this is temporary because above should be enough when implemented
+                if( inputType == InputType.Push && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Pushing;
+                    EnterActionState( actionState );
                 }
-                previousActionState = actionState;
-                actionState = ActionState.Pulling;
-                ExitActionState( previousActionState );
-                EnterActionState( actionState );
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Reloading;
+                    EnterActionState( actionState );
+                }
                 break;
             case ActionState.Idle:
-                if( actionState == ActionState.Reloading ) {
-                    print( "Can't go Idle.. is reloading" );
-                    break;
-                }
-                else if( previousActionState != ActionState.Idle && previousActionState != ActionState.Reloading ) {
+                // add here if something should override the rest like a shoot for the next 10 seconds powerup
 
+                if( inputType == InputType.Push && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Pushing;
+                    EnterActionState( actionState );
                 }
-
+                else if( inputType == InputType.Pull && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Pulling;
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Reloading;
+                    EnterActionState( actionState );
+                }
                 break;
         }
     }
@@ -161,7 +241,7 @@ public class PlayerActionController: MonoBehaviour {
                 break;
             case ActionState.Reloading:
                 Debug.Log( "Started reloading" );
-                vacuumCleaner.StartReload();
+                //vacuumCleaner.StartReload();
                 break;
             case ActionState.Idle:
                 Debug.Log( "No action started" );
@@ -183,7 +263,7 @@ public class PlayerActionController: MonoBehaviour {
                 break;
             case ActionState.Reloading:
                 Debug.Log( "Stopped reloading" );
-                vacuumCleaner.StopReload();
+                //vacuumCleaner.StopReload();
                 break;
             case ActionState.Idle:
                 Debug.Log( "No action stopped" );
