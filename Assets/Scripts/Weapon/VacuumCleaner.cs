@@ -10,17 +10,16 @@ public class VacuumCleaner: MonoBehaviour {
     public float vacuumLength = 2f;
     public float coneAngle = 45f;
     public float effectCooldown = 0.1f;
+    public int ammo = 30; 
     public LayerMask affectedLayers;
 
     public Transform forceOrigin;
 
     Coroutine pushCoroutine;
     Coroutine pullCoroutine;
+    Coroutine reloadCoroutine;
 
     public void StartPush( Transform origin ) {
-        StopPull();
-        StopPush();
-
         pushCoroutine = StartCoroutine( PushCoroutine( origin ) );
     }
 
@@ -32,9 +31,6 @@ public class VacuumCleaner: MonoBehaviour {
     }
 
     public void StartPull( Transform origin ) {
-        StopPush();
-        StopPull();
-
         pullCoroutine = StartCoroutine( PullCoroutine( origin ) );
     }
 
@@ -43,6 +39,13 @@ public class VacuumCleaner: MonoBehaviour {
             StopCoroutine( pullCoroutine );
             pullCoroutine = null;
         }
+    }
+
+    public void StartReload() {
+    }
+
+    public void StopReload() {
+
     }
 
     IEnumerator PushCoroutine( Transform origin ) {

@@ -1,4 +1,7 @@
+using System;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Windows;
 
 [RequireComponent( typeof( PlayerInputHandler ) )]
 public class PlayerActionController: MonoBehaviour {
@@ -6,17 +9,37 @@ public class PlayerActionController: MonoBehaviour {
     public VacuumCleanerVFX vacuumVFX;
 
     public enum ActionState {
-        None,
+        Idle,
         Pushing,
-        Pulling
+        Pulling,
+        Reloading
     }
 
-    ActionState actionState = ActionState.None;
-    ActionState previousActionState = ActionState.None;
-    ActionState lastActionState = ActionState.None;
+    enum InputType { 
+        None, 
+        Push,
+        Pull,
+        Reload
+    }
 
-    bool isPushingHeld = false;
-    bool isPullingHeld = false;
+    enum InputPhase {
+        None,
+        Started, 
+        Performed, 
+        Canceled
+    }
+
+    ActionState actionState = ActionState.Idle;
+    ActionState previousActionState = ActionState.Idle;
+    InputType inputType;
+    InputPhase inputPhase;
+
+    bool pushInputStarted;
+    bool pullInputStarted;
+
+    float pushValue;
+    float pullValue;
+    float reloadValue;
 
     PlayerInputHandler inputHandler;
 
@@ -26,64 +49,181 @@ public class PlayerActionController: MonoBehaviour {
 
     void OnEnable() {
         inputHandler.OnPushStarted += OnPushStarted;
+        inputHandler.OnPushPerformed += OnPushPerformed;
         inputHandler.OnPushCanceled += OnPushCanceled;
 
         inputHandler.OnPullStarted += OnPullStarted;
+        inputHandler.OnPullPerformed += OnPullPerformed;
         inputHandler.OnPullCanceled += OnPullCanceled;
+
+        inputHandler.OnReloadStarted += OnReloadStarted;
+        inputHandler.OnReloadCanceled += OnReloadCanceled;
     }
 
     void OnDisable() {
         inputHandler.OnPushStarted -= OnPushStarted;
+        inputHandler.OnPushPerformed -= OnPushPerformed;
         inputHandler.OnPushCanceled -= OnPushCanceled;
 
         inputHandler.OnPullStarted -= OnPullStarted;
+        inputHandler.OnPullPerformed -= OnPullPerformed;
         inputHandler.OnPullCanceled -= OnPullCanceled;
+
+        inputHandler.OnReloadStarted -= OnReloadStarted;
+        inputHandler.OnReloadCanceled -= OnReloadCanceled;
     }
 
-    public void OnPushStarted() {
-        isPushingHeld = true;
-        lastActionState = ActionState.Pushing;
+    void Update() {
+        pushInputStarted = false;
+        pullInputStarted = false;
         DecideActionState();
     }
 
-    public void OnPushCanceled() {
-        isPushingHeld = false;
-        DecideActionState();
+    // wrapper because of action<float> signature from input script
+    void OnPushStarted( float value ) { HandlePushInput( InputPhase.Started, value ); }
+    void OnPushPerformed( float value ) { HandlePushInput( InputPhase.Performed, value ); }
+    void OnPushCanceled() { HandlePushInput( InputPhase.Canceled, 0 ); }
+
+    void OnPullStarted(float value) { HandlePullInput( InputPhase.Started, value ); } 
+    void OnPullPerformed(float value) { HandlePullInput( InputPhase.Performed, value ); }
+    void OnPullCanceled() { HandlePullInput( InputPhase.Canceled, 0 ); }
+
+    void OnReloadStarted() { HandleReloadInput( InputPhase.Started, 1f ); }
+    void OnReloadCanceled() { HandleReloadInput( InputPhase.Canceled, 0 ); }
+
+    void HandlePushInput( InputPhase phase, float value ) {
+        if( pushInputStarted && phase == InputPhase.Performed ) {
+            return;
+        }
+        if( phase == InputPhase.Started ) {
+            pushInputStarted = true;
+        }
+        inputType = InputType.Push;
+        inputPhase = phase;
+        pushValue = value;
     }
 
-    public void OnPullStarted() {
-        isPullingHeld = true;
-        lastActionState = ActionState.Pulling;
-        DecideActionState();
+    void HandlePullInput( InputPhase phase, float value ) {
+        if( pullInputStarted && phase == InputPhase.Performed ) {
+            return;
+        }
+        if( phase == InputPhase.Started ) {
+            pullInputStarted = true;
+        }
+        inputType = InputType.Pull;
+        inputPhase = phase;
+        pullValue = value;
     }
 
-    public void OnPullCanceled() {
-        isPullingHeld = false;
-        DecideActionState();
+    void HandleReloadInput( InputPhase phase, float value ) {
+        inputType = InputType.Reload;
+        inputPhase = phase;
+        reloadValue = value;
     }
 
     void DecideActionState() {
-        ActionState newState;
+        switch( actionState ) {
+            case ActionState.Pushing:
+                // add here if something should override the rest like a shoot for the next 10 seconds powerup
 
-        if( isPushingHeld && isPullingHeld ) {
-            newState = lastActionState;
-        }
-        else if( isPushingHeld ) {
-            newState = ActionState.Pushing;
-        }
-        else if( isPullingHeld ) {
-            newState = ActionState.Pulling;
-        }
-        else {
-            newState = ActionState.None;
-        }
+                if( inputType == InputType.Push && inputPhase == InputPhase.Canceled ) {
+                    ExitActionState( actionState );
+                    actionState = ActionState.Idle;
+                    if( pullValue != 0 ) {
+                        // maybe add ammo check
+                        actionState = ActionState.Pulling;
+                    }
+                    else if( reloadValue != 0 ) {
+                        // maybe add ammo check
+                        actionState = ActionState.Reloading;
+                    }
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Pull && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Pulling;
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Reloading;
+                    EnterActionState( actionState );
+                }
+                break;
+            case ActionState.Pulling:
+                // add here if something should override the rest like a shoot for the next 10 seconds powerup
 
-        if( newState == actionState ) return;
+                if( inputType == InputType.Pull && inputPhase == InputPhase.Canceled ) {
+                    ExitActionState( actionState );
+                    actionState = ActionState.Idle;
+                    if( pushValue != 0 ) {
+                        // maybe add ammo check
+                        actionState = ActionState.Pushing;
+                    }
+                    else if( reloadValue != 0 ) {
+                        // maybe add ammo check
+                        actionState = ActionState.Reloading;
+                    }
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Push && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Pushing;
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Reloading;
+                    EnterActionState( actionState );
+                }
+                break;
+            case ActionState.Reloading:
+                // add here if something should override the rest like a shoot for the next 10 seconds powerup
 
-        ExitActionState( actionState );
-        EnterActionState( newState );
-        previousActionState = actionState;
-        actionState = newState;
+                // subscribe to reload over event from the gun and set isReloading value in this script
+                // if isReloading == false then exit action state and check other inputValues for new state
+
+                // this is temporary because above should be enough when implemented
+                if( inputType == InputType.Push && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Pushing;
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Reloading;
+                    EnterActionState( actionState );
+                }
+                break;
+            case ActionState.Idle:
+                // add here if something should override the rest like a shoot for the next 10 seconds powerup
+
+                if( inputType == InputType.Push && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Pushing;
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Pull && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Pulling;
+                    EnterActionState( actionState );
+                }
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                    ExitActionState( actionState );
+                    // maybe add ammo check
+                    actionState = ActionState.Reloading;
+                    EnterActionState( actionState );
+                }
+                break;
+        }
     }
 
     // play VFX/audio here
@@ -99,8 +239,12 @@ public class PlayerActionController: MonoBehaviour {
                 vacuumCleaner.StartPull( vacuumCleaner.forceOrigin );
                 vacuumVFX.StartEffect( vacuumCleaner.vacuumLength, vacuumCleaner.vacuumRadius );
                 break;
-            case ActionState.None:
-                Debug.Log( "No action" );
+            case ActionState.Reloading:
+                Debug.Log( "Started reloading" );
+                //vacuumCleaner.StartReload();
+                break;
+            case ActionState.Idle:
+                Debug.Log( "No action started" );
                 break;
         }
     }
@@ -116,6 +260,13 @@ public class PlayerActionController: MonoBehaviour {
                 Debug.Log( "Stopped pulling" );
                 vacuumCleaner.StopPull();
                 vacuumVFX.StopEffect();
+                break;
+            case ActionState.Reloading:
+                Debug.Log( "Stopped reloading" );
+                //vacuumCleaner.StopReload();
+                break;
+            case ActionState.Idle:
+                Debug.Log( "No action stopped" );
                 break;
         }
     }
