@@ -36,17 +36,17 @@ public class PlayerInputHandler: MonoBehaviour {
     void OnEnable() {
         controls.Enable();
 
-        controls.Player.MoveLeft.performed += HandleMoveLeftInput;
-        controls.Player.MoveLeft.canceled += HandleMoveLeftInput;
+        controls.Player.MoveLeft.performed += HandleMoveDirectionInput;
+        controls.Player.MoveLeft.canceled += HandleMoveDirectionInput;
 
-        controls.Player.MoveRight.performed += HandleMoveRightInput;
-        controls.Player.MoveRight.canceled += HandleMoveRightInput;
+        controls.Player.MoveRight.performed += HandleMoveDirectionInput;
+        controls.Player.MoveRight.canceled += HandleMoveDirectionInput;
 
-        controls.Player.MoveUp.performed += HandleMoveUpInput;
-        controls.Player.MoveUp.canceled += HandleMoveUpInput;
+        controls.Player.MoveUp.performed += HandleMoveDirectionInput;
+        controls.Player.MoveUp.canceled += HandleMoveDirectionInput;
 
-        controls.Player.MoveDown.performed += HandleMoveDownInput;
-        controls.Player.MoveDown.canceled += HandleMoveDownInput;
+        controls.Player.MoveDown.performed += HandleMoveDirectionInput;
+        controls.Player.MoveDown.canceled += HandleMoveDirectionInput;
 
         controls.Player.Look.performed += HandleLookInput;
         controls.Player.Look.canceled += HandleLookInput;
@@ -64,17 +64,17 @@ public class PlayerInputHandler: MonoBehaviour {
     }
 
     void OnDisable() {
-        controls.Player.MoveLeft.performed -= HandleMoveLeftInput;
-        controls.Player.MoveLeft.canceled -= HandleMoveLeftInput;
+        controls.Player.MoveLeft.performed -= HandleMoveDirectionInput;
+        controls.Player.MoveLeft.canceled -= HandleMoveDirectionInput;
 
-        controls.Player.MoveRight.performed -= HandleMoveRightInput;
-        controls.Player.MoveRight.canceled -= HandleMoveRightInput;
+        controls.Player.MoveRight.performed -= HandleMoveDirectionInput;
+        controls.Player.MoveRight.canceled -= HandleMoveDirectionInput;
 
-        controls.Player.MoveUp.performed -= HandleMoveUpInput;
-        controls.Player.MoveUp.canceled -= HandleMoveUpInput;
+        controls.Player.MoveUp.performed -= HandleMoveDirectionInput;
+        controls.Player.MoveUp.canceled -= HandleMoveDirectionInput;
 
-        controls.Player.MoveDown.performed -= HandleMoveDownInput;
-        controls.Player.MoveDown.canceled -= HandleMoveDownInput;
+        controls.Player.MoveDown.performed -= HandleMoveDirectionInput;
+        controls.Player.MoveDown.canceled -= HandleMoveDirectionInput;
 
         controls.Player.Look.performed -= HandleLookInput;
         controls.Player.Look.canceled -= HandleLookInput;
@@ -93,26 +93,42 @@ public class PlayerInputHandler: MonoBehaviour {
         controls.Disable();
     }
 
+    private void Update() {
+        // Script execution order skal sættes til -2 for at denne update udføres før de andre, hvilket er nødvendigt for at de er garranteret at få den korrekte værdi.
+        UpdateMovementInput();
+    }
+
     // movement Handlers
-    void HandleMoveLeftInput( InputAction.CallbackContext ctx ) {
-        lastHorizontal = HorizontalDirection.Left;
-        ResolveMovement();
+    void HandleMoveDirectionInput( InputAction.CallbackContext ctx ) {
+        if( ctx.action == controls.Player.MoveLeft ) {
+            lastHorizontal = HorizontalDirection.Left;
+        }
+        else if( ctx.action == controls.Player.MoveRight ) {
+            lastHorizontal = HorizontalDirection.Right;
+        }
+        else if( ctx.action == controls.Player.MoveUp ) {
+            lastVertical = VerticalDirection.Up;
+        }
+        else if( ctx.action == controls.Player.MoveDown ) {
+            lastVertical = VerticalDirection.Down;
+        }
     }
 
-    void HandleMoveRightInput( InputAction.CallbackContext ctx ) {
-        lastHorizontal = HorizontalDirection.Right;
-        ResolveMovement();
-    }
+    //void HandleMoveRightInput( InputAction.CallbackContext ctx ) {
+    //    lastHorizontal = HorizontalDirection.Left;
+    //}
 
-    void HandleMoveUpInput( InputAction.CallbackContext ctx ) {
-        lastVertical = VerticalDirection.Up;
-        ResolveMovement();
-    }
+    //void HandleMoveRightInput( InputAction.CallbackContext ctx ) {
+    //    lastHorizontal = HorizontalDirection.Right;
+    //}
 
-    void HandleMoveDownInput( InputAction.CallbackContext ctx ) {   
-        lastVertical = VerticalDirection.Down;
-        ResolveMovement();
-    }
+    //void HandleMoveUpInput( InputAction.CallbackContext ctx ) {
+    //    lastVertical = VerticalDirection.Up;
+    //}
+
+    //void HandleMoveDownInput( InputAction.CallbackContext ctx ) {   
+    //    lastVertical = VerticalDirection.Down;
+    //}
 
     // look handler
     void HandleLookInput( InputAction.CallbackContext ctx ) {
@@ -154,7 +170,7 @@ public class PlayerInputHandler: MonoBehaviour {
         OnReloadCanceled?.Invoke();
     }
 
-    void ResolveMovement() {
+    void UpdateMovementInput() {
         float left = controls.Player.MoveLeft.ReadValue<float>();
         float right = controls.Player.MoveRight.ReadValue<float>();
         float up = controls.Player.MoveUp.ReadValue<float>();

@@ -103,39 +103,39 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": ""MoveLeft"",
-                    ""type"": ""Button"",
+                    ""type"": ""Value"",
                     ""id"": ""036e4218-e90e-415e-805c-02bb7bc78b39"",
-                    ""expectedControlType"": """",
+                    ""expectedControlType"": ""Analog"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""MoveRight"",
-                    ""type"": ""Button"",
+                    ""type"": ""Value"",
                     ""id"": ""a81f2eba-6a47-4fb6-8e26-f6c9574a34d9"",
-                    ""expectedControlType"": """",
+                    ""expectedControlType"": ""Analog"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""MoveUp"",
-                    ""type"": ""Button"",
+                    ""type"": ""Value"",
                     ""id"": ""ad752e67-503b-4805-8cb0-62653333dbd2"",
-                    ""expectedControlType"": """",
+                    ""expectedControlType"": ""Analog"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""MoveDown"",
-                    ""type"": ""Button"",
+                    ""type"": ""Value"",
                     ""id"": ""31bb6bad-a9e3-4870-be7e-525c19ae3f28"",
-                    ""expectedControlType"": """",
+                    ""expectedControlType"": ""Analog"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""Look"",
