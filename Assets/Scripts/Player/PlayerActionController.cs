@@ -24,7 +24,6 @@ public class PlayerActionController: MonoBehaviour {
 
     enum InputPhase {
         None,
-        Started, 
         Performed, 
         Canceled
     }
@@ -35,7 +34,7 @@ public class PlayerActionController: MonoBehaviour {
     InputPhase inputPhase;
 
     bool pushInputStarted;
-    bool pullInputStarted;
+    bool pullInputPerformed;
 
     float pushValue;
     float pullValue;
@@ -48,54 +47,48 @@ public class PlayerActionController: MonoBehaviour {
     }
 
     void OnEnable() {
-        inputHandler.OnPushStarted += OnPushStarted;
         inputHandler.OnPushPerformed += OnPushPerformed;
         inputHandler.OnPushCanceled += OnPushCanceled;
 
-        inputHandler.OnPullStarted += OnPullStarted;
         inputHandler.OnPullPerformed += OnPullPerformed;
         inputHandler.OnPullCanceled += OnPullCanceled;
 
-        inputHandler.OnReloadStarted += OnReloadStarted;
+        inputHandler.OnReloadPerformed += OnReloadPerformed;
         inputHandler.OnReloadCanceled += OnReloadCanceled;
     }
 
     void OnDisable() {
-        inputHandler.OnPushStarted -= OnPushStarted;
         inputHandler.OnPushPerformed -= OnPushPerformed;
         inputHandler.OnPushCanceled -= OnPushCanceled;
 
-        inputHandler.OnPullStarted -= OnPullStarted;
         inputHandler.OnPullPerformed -= OnPullPerformed;
         inputHandler.OnPullCanceled -= OnPullCanceled;
 
-        inputHandler.OnReloadStarted -= OnReloadStarted;
+        inputHandler.OnReloadPerformed -= OnReloadPerformed;
         inputHandler.OnReloadCanceled -= OnReloadCanceled;
     }
 
     void Update() {
         pushInputStarted = false;
-        pullInputStarted = false;
+        pullInputPerformed = false;
         DecideActionState();
     }
 
     // wrapper because of action<float> signature from input script
-    void OnPushStarted( float value ) { HandlePushInput( InputPhase.Started, value ); }
     void OnPushPerformed( float value ) { HandlePushInput( InputPhase.Performed, value ); }
     void OnPushCanceled() { HandlePushInput( InputPhase.Canceled, 0 ); }
 
-    void OnPullStarted(float value) { HandlePullInput( InputPhase.Started, value ); } 
     void OnPullPerformed(float value) { HandlePullInput( InputPhase.Performed, value ); }
     void OnPullCanceled() { HandlePullInput( InputPhase.Canceled, 0 ); }
 
-    void OnReloadStarted() { HandleReloadInput( InputPhase.Started, 1f ); }
+    void OnReloadPerformed() { HandleReloadInput( InputPhase.Performed, 1f ); }
     void OnReloadCanceled() { HandleReloadInput( InputPhase.Canceled, 0 ); }
 
     void HandlePushInput( InputPhase phase, float value ) {
         if( pushInputStarted && phase == InputPhase.Performed ) {
             return;
         }
-        if( phase == InputPhase.Started ) {
+        if( phase == InputPhase.Performed ) {
             pushInputStarted = true;
         }
         inputType = InputType.Push;
@@ -104,11 +97,11 @@ public class PlayerActionController: MonoBehaviour {
     }
 
     void HandlePullInput( InputPhase phase, float value ) {
-        if( pullInputStarted && phase == InputPhase.Performed ) {
+        if( pullInputPerformed && phase == InputPhase.Performed ) {
             return;
         }
-        if( phase == InputPhase.Started ) {
-            pullInputStarted = true;
+        if( phase == InputPhase.Performed ) {
+            pullInputPerformed = true;
         }
         inputType = InputType.Pull;
         inputPhase = phase;
@@ -139,13 +132,13 @@ public class PlayerActionController: MonoBehaviour {
                     }
                     EnterActionState( actionState );
                 }
-                else if( inputType == InputType.Pull && inputPhase == InputPhase.Started ) {
+                else if( inputType == InputType.Pull && inputPhase == InputPhase.Performed ) {
                     ExitActionState( actionState );
                     // maybe add ammo check
                     actionState = ActionState.Pulling;
                     EnterActionState( actionState );
                 }
-                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Performed ) {
                     ExitActionState( actionState );
                     // maybe add ammo check
                     actionState = ActionState.Reloading;
@@ -168,13 +161,13 @@ public class PlayerActionController: MonoBehaviour {
                     }
                     EnterActionState( actionState );
                 }
-                else if( inputType == InputType.Push && inputPhase == InputPhase.Started ) {
+                else if( inputType == InputType.Push && inputPhase == InputPhase.Performed ) {
                     ExitActionState( actionState );
                     // maybe add ammo check
                     actionState = ActionState.Pushing;
                     EnterActionState( actionState );
                 }
-                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Performed ) {
                     ExitActionState( actionState );
                     // maybe add ammo check
                     actionState = ActionState.Reloading;
@@ -188,13 +181,13 @@ public class PlayerActionController: MonoBehaviour {
                 // if isReloading == false then exit action state and check other inputValues for new state
 
                 // this is temporary because above should be enough when implemented
-                if( inputType == InputType.Push && inputPhase == InputPhase.Started ) {
+                if( inputType == InputType.Push && inputPhase == InputPhase.Performed ) {
                     ExitActionState( actionState );
                     // maybe add ammo check
                     actionState = ActionState.Pushing;
                     EnterActionState( actionState );
                 }
-                else if( inputType == InputType.Pull && inputPhase == InputPhase.Started ) {
+                else if( inputType == InputType.Pull && inputPhase == InputPhase.Performed ) {
                     ExitActionState( actionState );
                     // maybe add ammo check
                     actionState = ActionState.Pulling;
@@ -204,19 +197,19 @@ public class PlayerActionController: MonoBehaviour {
             case ActionState.Idle:
                 // add here if something should override the rest like a shoot for the next 10 seconds powerup
 
-                if( inputType == InputType.Push && inputPhase == InputPhase.Started ) {
+                if( inputType == InputType.Push && inputPhase == InputPhase.Performed ) {
                     ExitActionState( actionState );
                     // maybe add ammo check
                     actionState = ActionState.Pushing;
                     EnterActionState( actionState );
                 }
-                else if( inputType == InputType.Pull && inputPhase == InputPhase.Started ) {
+                else if( inputType == InputType.Pull && inputPhase == InputPhase.Performed ) {
                     ExitActionState( actionState );
                     // maybe add ammo check
                     actionState = ActionState.Pulling;
                     EnterActionState( actionState );
                 }
-                else if( inputType == InputType.Reload && inputPhase == InputPhase.Started ) {
+                else if( inputType == InputType.Reload && inputPhase == InputPhase.Performed ) {
                     ExitActionState( actionState );
                     // maybe add ammo check
                     actionState = ActionState.Reloading;

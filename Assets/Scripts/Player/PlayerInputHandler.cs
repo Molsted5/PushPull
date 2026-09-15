@@ -16,7 +16,7 @@ public class PlayerInputHandler: MonoBehaviour {
     public event Action<float> OnPullPerformed;
     public event Action OnPullCanceled;
 
-    public event Action OnReloadStarted;
+    public event Action OnReloadPerformed;
     public event Action OnReloadCanceled;
 
     InputSystem_Actions controls;
@@ -51,16 +51,14 @@ public class PlayerInputHandler: MonoBehaviour {
         controls.Player.Look.performed += HandleLookInput;
         controls.Player.Look.canceled += HandleLookInput;
 
-        controls.Player.Push.started += PushStartedInput;
-        controls.Player.Push.performed += PushPerformedInput;
-        controls.Player.Push.canceled += PushCanceledInput; 
+        controls.Player.Push.performed += HandlePushInput;
+        controls.Player.Push.canceled += HandlePushInput; 
 
-        controls.Player.Pull.started += PullStartedInput;
-        controls.Player.Pull.performed += PullPerformedInput;
-        controls.Player.Pull.canceled += PullCanceledInput;
+        controls.Player.Pull.performed += HandlePullInput;
+        controls.Player.Pull.canceled += HandlePullInput;
 
-        controls.Player.Reload.started += ReloadStartedInput;
-        controls.Player.Reload.canceled += ReloadCanceledInput;
+        controls.Player.Reload.performed += HandleReloadInput;
+        controls.Player.Reload.canceled += HandleReloadInput;
     }
 
     void OnDisable() {
@@ -79,26 +77,24 @@ public class PlayerInputHandler: MonoBehaviour {
         controls.Player.Look.performed -= HandleLookInput;
         controls.Player.Look.canceled -= HandleLookInput;
 
-        controls.Player.Push.started -= PushStartedInput;
-        controls.Player.Push.performed -= PushPerformedInput;
-        controls.Player.Push.canceled -= PushCanceledInput;
+        controls.Player.Push.performed -= HandlePushInput;
+        controls.Player.Push.canceled -= HandlePushInput;
 
-        controls.Player.Pull.started -= PullStartedInput;
-        controls.Player.Pull.performed -= PullPerformedInput;
-        controls.Player.Pull.canceled -= PullCanceledInput;
+        controls.Player.Pull.performed -= HandlePullInput;
+        controls.Player.Pull.canceled -= HandlePullInput;
 
-        controls.Player.Reload.started -= ReloadStartedInput;
-        controls.Player.Reload.canceled -= ReloadCanceledInput;
+        controls.Player.Reload.performed -= HandleReloadInput;
+        controls.Player.Reload.canceled -= HandleReloadInput;
 
         controls.Disable();
     }
 
     private void Update() {
-        // Script execution order skal sættes til -2 for at denne update udføres før de andre, hvilket er nødvendigt for at de er garranteret at få den korrekte værdi.
+        // Script execution order skal sættes til -2 for at denne update udføres før andre scripts, hvilket er nødvendigt for at de er garranteret at få den korrekte værdi.
         UpdateMovementInput();
     }
 
-    // movement Handlers
+    // Handlers
     void HandleMoveDirectionInput( InputAction.CallbackContext ctx ) {
         if( ctx.action == controls.Player.MoveLeft ) {
             lastHorizontal = HorizontalDirection.Left;
@@ -114,60 +110,35 @@ public class PlayerInputHandler: MonoBehaviour {
         }
     }
 
-    //void HandleMoveRightInput( InputAction.CallbackContext ctx ) {
-    //    lastHorizontal = HorizontalDirection.Left;
-    //}
-
-    //void HandleMoveRightInput( InputAction.CallbackContext ctx ) {
-    //    lastHorizontal = HorizontalDirection.Right;
-    //}
-
-    //void HandleMoveUpInput( InputAction.CallbackContext ctx ) {
-    //    lastVertical = VerticalDirection.Up;
-    //}
-
-    //void HandleMoveDownInput( InputAction.CallbackContext ctx ) {   
-    //    lastVertical = VerticalDirection.Down;
-    //}
-
-    // look handler
     void HandleLookInput( InputAction.CallbackContext ctx ) {
         ResolveLook();
     } 
 
-    // push handlers
-    void PushStartedInput( InputAction.CallbackContext ctx ) { 
-        OnPushStarted?.Invoke( ctx.ReadValue<float>() ); 
+    void HandlePushInput( InputAction.CallbackContext ctx ) { 
+        if( ctx.performed ) {
+            OnPushPerformed?.Invoke( ctx.ReadValue<float>() );
+        }
+        else if( ctx.canceled) {
+            OnPushCanceled?.Invoke();
+        }
     }
 
-    void PushPerformedInput( InputAction.CallbackContext ctx ) {
-        OnPushPerformed?.Invoke( ctx.ReadValue<float>() );
+    void HandlePullInput( InputAction.CallbackContext ctx ) {
+        if( ctx.performed ) {
+            OnPullPerformed?.Invoke( ctx.ReadValue<float>() );
+        }
+        else if( ctx.canceled ) {
+            OnPullCanceled?.Invoke();
+        }
     }
 
-    void PushCanceledInput( InputAction.CallbackContext ctx ) {
-        OnPushCanceled?.Invoke();
-    }
-
-    // pull handlers
-    void PullStartedInput( InputAction.CallbackContext ctx ) {
-        OnPullStarted?.Invoke( ctx.ReadValue<float>() );
-    }
-
-    void PullPerformedInput( InputAction.CallbackContext ctx ) {
-        OnPullPerformed?.Invoke( ctx.ReadValue<float>() );
-    }
-
-    void PullCanceledInput( InputAction.CallbackContext ctx ) {
-        OnPullCanceled?.Invoke();
-    }
-
-    // reload handlers
-    void ReloadStartedInput( InputAction.CallbackContext ctx ) {
-        OnReloadStarted?.Invoke();
-    }
-
-    void ReloadCanceledInput( InputAction.CallbackContext ctx ) {
-        OnReloadCanceled?.Invoke();
+    void HandleReloadInput( InputAction.CallbackContext ctx ) {
+        if( ctx.performed ) {
+            OnReloadPerformed?.Invoke();
+        }
+        else if( ctx.canceled ) {
+            OnReloadCanceled?.Invoke();
+        }
     }
 
     void UpdateMovementInput() {
