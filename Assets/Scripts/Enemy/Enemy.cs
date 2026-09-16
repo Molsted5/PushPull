@@ -135,6 +135,7 @@ public class Enemy: MonoBehaviour {
                     position = target.position;
                 }
 
+                // This only determines the direction not the speed
                 pathfinder.SetDestination( position );
             }
 
