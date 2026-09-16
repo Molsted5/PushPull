@@ -9,30 +9,22 @@ public class PlayerAimController: MonoBehaviour {
     Vector3 direction;
     Vector3 heightCorrectedPoint;
     bool usingStick;
-    PlayerInputHandler inputHandler;
+    PlayerInputHandler input;
 
     void Awake() {
-        inputHandler = GetComponent<PlayerInputHandler>();
-    }
-
-    void OnEnable() {
-        inputHandler.OnMouseLook += OnMouseLook;
-        inputHandler.OnStickLook += OnStickLook;
-    }
-
-    void OnDisable() {
-        inputHandler.OnMouseLook -= OnMouseLook;
-        inputHandler.OnStickLook -= OnStickLook;
+        input = GetComponent<PlayerInputHandler>();
     }
 
     void Update() {
         if( !usingStick ) {
+            OnMouseLook();
             RotateTowardMouse();
         }
         usingStick = false;
     }
 
-    void OnMouseLook( Vector2 screenPos ) {
+    void OnMouseLook() {
+        Vector2 screenPos = input.MouseLookValue;
         Ray ray = Camera.main.ScreenPointToRay( screenPos );
         Plane groundPlane = new Plane( Vector3.up, transform.position );
         if( groundPlane.Raycast( ray, out float distance ) ) {

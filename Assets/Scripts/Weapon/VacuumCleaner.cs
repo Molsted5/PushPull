@@ -50,7 +50,7 @@ public class VacuumCleaner: MonoBehaviour {
 
     IEnumerator PushCoroutine( Transform origin ) {
         while( true ) {
-            ApplyForce( origin.position, origin.forward );
+            ApplyForce( origin.position, origin.forward, origin.forward );
             //yield return new WaitForSeconds( effectCooldown );
             yield return null;
         }
@@ -58,26 +58,25 @@ public class VacuumCleaner: MonoBehaviour {
 
     IEnumerator PullCoroutine( Transform origin ) {
         while( true ) {
-            ApplyForce( origin.position, -origin.forward );
+            ApplyForce( origin.position, -origin.forward, origin.forward );
             //yield return new WaitForSeconds( effectCooldown );
             yield return null;
         }
     }
 
-    void ApplyForce( Vector3 origin, Vector3 direction ) {
-        Vector3 forceDir = direction.normalized;
+    void ApplyForce( Vector3 origin, Vector3 forceDirection, Vector3 castDirection ) {
         Vector3 halfExtents = new Vector3( vacuumRadius, vacuumRadius, 0.2f );
-        RaycastHit[] hits = Physics.BoxCastAll( origin, halfExtents, forceDir, transform.rotation, vacuumLength, affectedLayers );
+        RaycastHit[] hits = Physics.BoxCastAll( origin, halfExtents, castDirection, transform.rotation, vacuumLength, affectedLayers );
         //Debug.DrawRay( origin, forceDir * vacuumLength, Color.red );
 
         foreach( RaycastHit hit in hits ) {
             Vector3 dirToTarget = ( hit.transform.position - origin ).normalized;
-            float angleToTarget = Vector3.Angle( forceDir, dirToTarget );
+            float angleToTarget = Vector3.Angle( forceDirection, dirToTarget );
 
             Enemy enemy = hit.transform.GetComponent<Enemy>();
 
             if( enemy != null ) {
-                enemy.TakeForce( forceDir * forceMagnitude );
+                enemy.TakeForce( forceDirection * forceMagnitude );
             }
 
             //if( angleToTarget <= coneAngle / 2f ) {

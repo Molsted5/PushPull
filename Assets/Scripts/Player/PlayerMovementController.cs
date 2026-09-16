@@ -25,15 +25,8 @@ public class PlayerMovementController: MonoBehaviour {
         characterController = GetComponent<CharacterController>();
     }
 
-    void OnEnable() {
-        inputHandler.OnMovePerformed += InputMovementDirection;
-    }
-
-    void OnDisable() {
-        inputHandler.OnMovePerformed -= InputMovementDirection;
-    }
-
     void Update() {
+        InputMovementDirection();
         DecideMovementState();
 
         PlayerData.position = transform.position; // references position before moving
@@ -44,7 +37,8 @@ public class PlayerMovementController: MonoBehaviour {
         }
     }
 
-    public void InputMovementDirection( Vector2 input ) {
+    public void InputMovementDirection() {
+        Vector2 input = inputHandler.MoveValue;
         wishDir = Vector3.ClampMagnitude( new Vector3( input.x, 0f, input.y ), 1f );
     }
 

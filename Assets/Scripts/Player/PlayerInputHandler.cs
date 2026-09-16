@@ -2,31 +2,33 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
 
+public enum LatestGunInputType { None, Push, Pull, Reload }
+public enum LatestGunInputPhaze { None, Performed, Canceled }
+
 public class PlayerInputHandler: MonoBehaviour {
-    public event Action<Vector2> OnMovePerformed;
-
-    public event Action<Vector2> OnMouseLook;
-    public event Action<Vector3> OnStickLook;
-
-    public event Action<float> OnPushStarted;
-    public event Action<float> OnPushPerformed;
-    public event Action OnPushCanceled;
-
-    public event Action<float> OnPullStarted;
-    public event Action<float> OnPullPerformed;
-    public event Action OnPullCanceled;
-
-    public event Action OnReloadPerformed;
-    public event Action OnReloadCanceled;
-
     InputSystem_Actions controls;
     PlayerInput playerInput;
 
+    // Move inputs
     enum HorizontalDirection { None, Left, Right }
     enum VerticalDirection { None, Up, Down }
-
+    
     HorizontalDirection lastHorizontal = HorizontalDirection.None;
     VerticalDirection lastVertical = VerticalDirection.None;
+
+    public Vector2 MoveValue { get; private set; }
+
+    // Look inputs
+    public Vector2 MouseLookValue { get; private set; }
+    public Vector3 StickLookValue { get; private set; }
+
+    // Gun inputs
+    public float pullValue { get; private set; }
+    public float pushValue { get; private set; }
+    public float reloadValue { get; private set; }
+    
+    public LatestGunInputType LatestGunInputTypeState { get; private set; }
+    public LatestGunInputPhaze LatestGunInputPhazeState { get; private set; }
 
     void Awake() {
         controls = new InputSystem_Actions();
@@ -48,9 +50,6 @@ public class PlayerInputHandler: MonoBehaviour {
         controls.Player.MoveDown.performed += HandleMoveDirectionInput;
         controls.Player.MoveDown.canceled += HandleMoveDirectionInput;
 
-        controls.Player.Look.performed += HandleLookInput;
-        controls.Player.Look.canceled += HandleLookInput;
-
         controls.Player.Push.performed += HandlePushInput;
         controls.Player.Push.canceled += HandlePushInput; 
 
@@ -61,40 +60,14 @@ public class PlayerInputHandler: MonoBehaviour {
         controls.Player.Reload.canceled += HandleReloadInput;
     }
 
-    void OnDisable() {
-        controls.Player.MoveLeft.performed -= HandleMoveDirectionInput;
-        controls.Player.MoveLeft.canceled -= HandleMoveDirectionInput;
-
-        controls.Player.MoveRight.performed -= HandleMoveDirectionInput;
-        controls.Player.MoveRight.canceled -= HandleMoveDirectionInput;
-
-        controls.Player.MoveUp.performed -= HandleMoveDirectionInput;
-        controls.Player.MoveUp.canceled -= HandleMoveDirectionInput;
-
-        controls.Player.MoveDown.performed -= HandleMoveDirectionInput;
-        controls.Player.MoveDown.canceled -= HandleMoveDirectionInput;
-
-        controls.Player.Look.performed -= HandleLookInput;
-        controls.Player.Look.canceled -= HandleLookInput;
-
-        controls.Player.Push.performed -= HandlePushInput;
-        controls.Player.Push.canceled -= HandlePushInput;
-
-        controls.Player.Pull.performed -= HandlePullInput;
-        controls.Player.Pull.canceled -= HandlePullInput;
-
-        controls.Player.Reload.performed -= HandleReloadInput;
-        controls.Player.Reload.canceled -= HandleReloadInput;
-
-        controls.Disable();
-    }
-
     private void Update() {
-        // Script execution order skal sættes til -2 for at denne update udføres før andre scripts, hvilket er nødvendigt for at de er garranteret at få den korrekte værdi.
+        // Script execution order skal sættes til et negativt tal for at denne update udføres før update i andre scripts, hvilket er nødvendigt for at de er garranteret at få den korrekte værdi.
         UpdateMovementInput();
+        UpdateLookInput();
+        UpdateGunInputs();
     }
 
-    // Handlers
+    // Handle inputs
     void HandleMoveDirectionInput( InputAction.CallbackContext ctx ) {
         if( ctx.action == controls.Player.MoveLeft ) {
             lastHorizontal = HorizontalDirection.Left;
@@ -110,35 +83,29 @@ public class PlayerInputHandler: MonoBehaviour {
         }
     }
 
-    void HandleLookInput( InputAction.CallbackContext ctx ) {
-        ResolveLook();
-    } 
+    void HandleGunInput( InputAction.CallbackContext ctx, LatestGunInputType type ) {
+        LatestGunInputTypeState = type;
+        LatestGunInputPhazeState = ctx.performed ? LatestGunInputPhaze.Performed :
+                                   ctx.canceled ? LatestGunInputPhaze.Canceled : LatestGunInputPhazeState;
+    }
 
     void HandlePushInput( InputAction.CallbackContext ctx ) { 
-        if( ctx.performed ) {
-            OnPushPerformed?.Invoke( ctx.ReadValue<float>() );
-        }
-        else if( ctx.canceled) {
-            OnPushCanceled?.Invoke();
-        }
+        HandleGunInput( ctx, LatestGunInputType.Push );
     }
 
     void HandlePullInput( InputAction.CallbackContext ctx ) {
-        if( ctx.performed ) {
-            OnPullPerformed?.Invoke( ctx.ReadValue<float>() );
-        }
-        else if( ctx.canceled ) {
-            OnPullCanceled?.Invoke();
-        }
+        HandleGunInput( ctx, LatestGunInputType.Pull );
     }
 
     void HandleReloadInput( InputAction.CallbackContext ctx ) {
-        if( ctx.performed ) {
-            OnReloadPerformed?.Invoke();
-        }
-        else if( ctx.canceled ) {
-            OnReloadCanceled?.Invoke();
-        }
+        HandleGunInput( ctx, LatestGunInputType.Reload );
+    }
+
+    // Update input values
+    void UpdateGunInputs() {
+        pushValue = controls.Player.Push.ReadValue<float>();
+        pullValue = controls.Player.Pull.ReadValue<float>();
+        reloadValue = controls.Player.Reload.ReadValue<float>();
     }
 
     void UpdateMovementInput() {
@@ -157,21 +124,45 @@ public class PlayerInputHandler: MonoBehaviour {
                      down > up ? -( down - up ) :
                      lastVertical == VerticalDirection.Down ? -down : up;
 
-        OnMovePerformed?.Invoke( resolved );
+        MoveValue = resolved;
     }
 
-    void ResolveLook() {
+    void UpdateLookInput() {
         Vector2 lookValue = controls.Player.Look.ReadValue<Vector2>();
         string scheme = playerInput.currentControlScheme;
 
         if( scheme == "Keyboard&Mouse" ) {
             // lookValue is already screen position
-            OnMouseLook?.Invoke( lookValue );
+            MouseLookValue = lookValue;
         }
         else {
             // lookValue is stick velocity
-            Vector3 velocity = new Vector3( lookValue.x, 0f, lookValue.y );
-            OnStickLook?.Invoke( velocity );
+            StickLookValue = new Vector3( lookValue.x, 0f, lookValue.y );
         }
+    }
+
+    void OnDisable() {
+        controls.Player.MoveLeft.performed -= HandleMoveDirectionInput;
+        controls.Player.MoveLeft.canceled -= HandleMoveDirectionInput;
+
+        controls.Player.MoveRight.performed -= HandleMoveDirectionInput;
+        controls.Player.MoveRight.canceled -= HandleMoveDirectionInput;
+
+        controls.Player.MoveUp.performed -= HandleMoveDirectionInput;
+        controls.Player.MoveUp.canceled -= HandleMoveDirectionInput;
+
+        controls.Player.MoveDown.performed -= HandleMoveDirectionInput;
+        controls.Player.MoveDown.canceled -= HandleMoveDirectionInput;
+
+        controls.Player.Push.performed -= HandlePushInput;
+        controls.Player.Push.canceled -= HandlePushInput;
+
+        controls.Player.Pull.performed -= HandlePullInput;
+        controls.Player.Pull.canceled -= HandlePullInput;
+
+        controls.Player.Reload.performed -= HandleReloadInput;
+        controls.Player.Reload.canceled -= HandleReloadInput;
+
+        controls.Disable();
     }
 }
