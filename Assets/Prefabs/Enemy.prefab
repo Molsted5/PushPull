@@ -280,6 +280,7 @@ MonoBehaviour:
   attackDistanceTreshold: 0.1
   timebetweenAttacks: 1
   damage: 1
+  moveSpeed: 1.8
 --- !u!114 &8637090560427044211
 MonoBehaviour:
   m_ObjectHideFlags: 0

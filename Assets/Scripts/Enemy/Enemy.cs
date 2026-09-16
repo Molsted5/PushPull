@@ -13,7 +13,10 @@ public class Enemy: MonoBehaviour {
     [HideInInspector] public float attackDistanceTreshold = 0.5f;
     [HideInInspector] public float timebetweenAttacks = 1f;
     [HideInInspector] public float damage = 1f;
-    
+    [HideInInspector] public float moveSpeed = 1.8f;
+    [HideInInspector] public float angularSpeed = 720f;
+    [HideInInspector] public float acceleration = 20f;
+
     public enum State { Idle, Chasing, Attacking };
     State currentState;
 
@@ -30,6 +33,7 @@ public class Enemy: MonoBehaviour {
 
     void Awake() {
         pathfinder = GetComponent<NavMeshAgent>();
+        pathfinder.updateRotation = false;
 
         if( GameObject.FindGameObjectWithTag( "Player" ) != null ) {
             target = GameObject.FindGameObjectWithTag( "Player" ).transform;
@@ -71,8 +75,12 @@ public class Enemy: MonoBehaviour {
 
     }
 
-    public void SetCharacteristics( float moveSpeed, float damage, float attackDistanceTreshold, float timebetweenAttacks, float enemyHealth, Color skinColor ) {
+    public void SetCharacteristics( float moveSpeed, float angularSpeed, float acceleration, float damage, float attackDistanceTreshold, float timebetweenAttacks, float enemyHealth, Color skinColor ) {
+        this.moveSpeed = moveSpeed;
         pathfinder.speed = moveSpeed;
+        this.angularSpeed = angularSpeed;
+        this.acceleration = acceleration;
+        pathfinder.acceleration = acceleration;
         this.damage = damage;
         this.attackDistanceTreshold = attackDistanceTreshold;
         this.timebetweenAttacks = timebetweenAttacks;
@@ -135,8 +143,26 @@ public class Enemy: MonoBehaviour {
                     position = target.position;
                 }
 
-                // This only determines the direction not the speed
+                pathfinder.speed = moveSpeed * Mathf.Max( 1f, forceOffset.magnitude );
+
+                float angularSpeed;
+                if( position != target.position ) {
+                    angularSpeed = 55f;
+                    pathfinder.acceleration = acceleration * 2f;
+                }
+                else {
+                    angularSpeed = this.angularSpeed;
+                    pathfinder.acceleration = acceleration;
+                }
+
                 pathfinder.SetDestination( position );
+
+                // rotation needs to not set a new rotation target each frame but instead have a cooldown. Inbetween the rotation accelerates.
+                transform.rotation = Quaternion.RotateTowards(
+                    transform.rotation,
+                    Quaternion.LookRotation( wishDirection, Vector3.up ),
+                    angularSpeed * Time.deltaTime
+                );
             }
 
             yield return null;

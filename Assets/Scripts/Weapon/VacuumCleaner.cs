@@ -65,6 +65,8 @@ public class VacuumCleaner: MonoBehaviour {
     }
 
     void ApplyForce( Vector3 origin, Vector3 forceDirection, Vector3 castDirection ) {
+        Vector3.Normalize( forceDirection ); 
+        Vector3.Normalize( castDirection );
         Vector3 halfExtents = new Vector3( vacuumRadius, vacuumRadius, 0.2f );
         RaycastHit[] hits = Physics.BoxCastAll( origin, halfExtents, castDirection, transform.rotation, vacuumLength, affectedLayers );
         //Debug.DrawRay( origin, forceDir * vacuumLength, Color.red );

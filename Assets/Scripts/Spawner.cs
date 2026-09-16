@@ -5,9 +5,19 @@ using UnityEngine;
 
 public class Spawner: MonoBehaviour {
     public Enemy enemy;
-    List<Transform> availableSpawns = new List<Transform>();
-    float moveSpeed = 1.8f; float damage = 1f; float attackDistanceTreshold = 0.5f; float timeBetweenAttacks = 1f; float health = 5f; Color color = Color.white;
+
     LivingEntity playerEntity;
+    List<Transform> availableSpawns = new List<Transform>();
+
+    public float moveSpeed = 1.8f;
+    public float angularSpeed = 720f;
+    public float acceleration = 20f;
+    public float damage = 1f; 
+    public float attackDistanceTreshold = 0.5f; 
+    public float timeBetweenAttacks = 1f; 
+    float health = 5f; 
+    Color color = Color.white;
+
     Coroutine spawnCoroutine;
 
     void Awake() {
@@ -66,7 +76,7 @@ public class Spawner: MonoBehaviour {
         for( int i = 0; i < amount; i++ ) {
             Transform spawnPoint = RandomSpawnPoint( spawnPointTimeout );
             Enemy spawnedEnemy = Instantiate( enemy, spawnPoint.position, spawnPoint.rotation ) as Enemy;
-            spawnedEnemy.SetCharacteristics( moveSpeed, damage, attackDistanceTreshold, timeBetweenAttacks, health, color );
+            spawnedEnemy.SetCharacteristics( moveSpeed, angularSpeed, acceleration, damage, attackDistanceTreshold, timeBetweenAttacks, health, color );
             // wait after each spawn except for the last one
             if( i < amount - 1 ) {
                 yield return new WaitForSeconds( timeBetweenSpawns );
