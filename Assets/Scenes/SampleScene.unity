@@ -822,7 +822,7 @@ MonoBehaviour:
   angularSpeed: 80
   acceleration: 20
   damage: 1
-  attackDistanceTreshold: 0.5
+  attackDistanceTreshold: 0.1
   timeBetweenAttacks: 1
 --- !u!1 &1256195858
 GameObject:
