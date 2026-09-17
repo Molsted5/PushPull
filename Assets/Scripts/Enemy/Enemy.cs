@@ -19,15 +19,19 @@ public class Enemy: MonoBehaviour {
     public float angularSpeed = 60f;
     public float maxAngularSpeed = 80f;
     public float angularAcceleration = 20f;
+    public float maxPredictionLength = 2f; 
     
     float currentAngularSpeed;
     float deltaAngleTarget;
+
+    Vector3 oldTargetPosition;
 
     public enum State { Idle, Chasing, Attacking };
     State currentState;
 
     NavMeshAgent pathfinder;
     Transform target;
+    CharacterController playerCC;
     LivingEntity targetEntity;
     //Material skinMaterial;
     //Color originalColor;
@@ -45,6 +49,7 @@ public class Enemy: MonoBehaviour {
             target = GameObject.FindGameObjectWithTag( "Player" ).transform;
             targetEntity = target.GetComponent<LivingEntity>();
             targetCollisionRadius = target.GetComponent<PlayerMovementController>().collisionRadius;
+            playerCC = target.GetComponent<CharacterController>();
             hasTarget = true;
 
             myCollisionRadius = GetComponent<CapsuleCollider>().radius;
@@ -133,10 +138,11 @@ public class Enemy: MonoBehaviour {
         while( hasTarget ) {
             if( currentState == State.Chasing && !myLivingEntity.dead ) {
                 Vector3 position;
+                Vector3 forceOffset = Vector3.zero;
 
                 // y should maybe just be transform and adjust for slope? not sure if nav mesh agents do that or need to
-                Vector3 wishDirection = ( target.position - transform.position ).normalized;
-                Vector3 forceOffset = Vector3.zero;
+                Vector3 dirToTarget = ( target.position - transform.position ).normalized;
+                Vector3 playerDir = playerCC.velocity.normalized;
 
                 for( int i = 0; i < forces.Count; i++ ) {
                     forceOffset += forces[i];
@@ -144,20 +150,26 @@ public class Enemy: MonoBehaviour {
                 forces.Clear();
 
                 if( forceOffset != Vector3.zero ) {
-                    position = transform.position + forceOffset;
                     pathfinder.acceleration = acceleration * 2f;
+                    position = transform.position + forceOffset;
                 }
                 else {
-                    position = target.position;
                     pathfinder.acceleration = acceleration;
+                    position = target.position;
+                    if( oldTargetPosition != target.position ) {
+                        float t = 1f - Mathf.Abs( Vector3.Dot( dirToTarget, playerDir ) );
+                        Vector3 predictionDistance = playerDir * maxPredictionLength * t;
+                        position += predictionDistance;
+                    }
+                    oldTargetPosition = target.position;
                 }
-
+                
                 pathfinder.speed = moveSpeed * Mathf.Max( 1f, forceOffset.magnitude );
 
                 pathfinder.SetDestination( position );
 
                 // Rotation
-                Quaternion targetRotation = Quaternion.LookRotation( wishDirection, Vector3.up );
+                Quaternion targetRotation = Quaternion.LookRotation( dirToTarget, Vector3.up );
                 float deltaAngleTarget = Mathf.DeltaAngle( transform.rotation.eulerAngles.y, targetRotation.eulerAngles.y );
                 if( deltaAngleTarget > 0 ) {
                     if( this.deltaAngleTarget >= 0 ) {
