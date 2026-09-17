@@ -281,6 +281,10 @@ MonoBehaviour:
   timebetweenAttacks: 1
   damage: 1
   moveSpeed: 1.8
+  acceleration: 20
+  angularSpeed: 80
+  angularAcceleration: 20
+  rotationTargetCooldown: 0.3
 --- !u!114 &8637090560427044211
 MonoBehaviour:
   m_ObjectHideFlags: 0

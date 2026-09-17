@@ -14,8 +14,11 @@ public class Enemy: MonoBehaviour {
     [HideInInspector] public float timebetweenAttacks = 1f;
     [HideInInspector] public float damage = 1f;
     [HideInInspector] public float moveSpeed = 1.8f;
-    [HideInInspector] public float angularSpeed = 720f;
     [HideInInspector] public float acceleration = 20f;
+    public float angularSpeed = 720f;
+    [HideInInspector] public float angularAcceleration = 20f;
+    float currentAngularSpeed;
+    Vector3 rotationTargetLookAtPosition;
 
     public enum State { Idle, Chasing, Attacking };
     State currentState;
@@ -31,6 +34,9 @@ public class Enemy: MonoBehaviour {
     bool hasTarget;
     List<Vector3> forces = new List<Vector3>();
 
+    public float rotationTargetCooldown = 0.2f;
+    float timeSinceNewRotationTarget;
+
     void Awake() {
         pathfinder = GetComponent<NavMeshAgent>();
         pathfinder.updateRotation = false;
@@ -43,6 +49,8 @@ public class Enemy: MonoBehaviour {
 
             myCollisionRadius = GetComponent<CapsuleCollider>().radius;
         }
+
+        rotationTargetLookAtPosition = transform.position + transform.forward;
     }
 
     void OnEnable() {
@@ -128,6 +136,7 @@ public class Enemy: MonoBehaviour {
             if( currentState == State.Chasing && !myLivingEntity.dead ) {
                 Vector3 position;
 
+                // y should maybe just be transform and adjust for slope? not sure if nav mesh agents do that or need to
                 Vector3 wishDirection = ( target.position - transform.position ).normalized;
                 Vector3 forceOffset = Vector3.zero;
 
@@ -147,7 +156,8 @@ public class Enemy: MonoBehaviour {
 
                 float angularSpeed;
                 if( position != target.position ) {
-                    angularSpeed = 55f;
+                    //angularSpeed = 55f;
+                    angularSpeed = this.angularSpeed;
                     pathfinder.acceleration = acceleration * 2f;
                 }
                 else {
@@ -157,12 +167,24 @@ public class Enemy: MonoBehaviour {
 
                 pathfinder.SetDestination( position );
 
-                // rotation needs to not set a new rotation target each frame but instead have a cooldown. Inbetween the rotation accelerates.
+                Vector3 wishRotationDirection;
+                timeSinceNewRotationTarget += Time.deltaTime;
+                if( timeSinceNewRotationTarget >= rotationTargetCooldown ) {
+                    rotationTargetLookAtPosition = target.position;
+                    wishRotationDirection = wishDirection;
+                    timeSinceNewRotationTarget = 0f;
+                }
+                else {
+                    wishRotationDirection = ( rotationTargetLookAtPosition - transform.position ).normalized;
+                    //currentAngularSpeed += angularAcceleration * Time.deltaTime;
+                }
+                currentAngularSpeed = this.angularSpeed;
                 transform.rotation = Quaternion.RotateTowards(
                     transform.rotation,
-                    Quaternion.LookRotation( wishDirection, Vector3.up ),
-                    angularSpeed * Time.deltaTime
+                    Quaternion.LookRotation( wishRotationDirection, Vector3.up ),
+                    currentAngularSpeed * Time.deltaTime
                 );
+
             }
 
             yield return null;
