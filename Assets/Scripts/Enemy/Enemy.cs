@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -13,12 +14,17 @@ public class Enemy: MonoBehaviour {
     [HideInInspector] public float attackDistanceTreshold = 0.5f;
     [HideInInspector] public float timebetweenAttacks = 1f;
     [HideInInspector] public float damage = 1f;
-    [HideInInspector] public float moveSpeed = 1.8f;
+    public float moveSpeed = 1.8f;
     [HideInInspector] public float acceleration = 20f;
-    public float angularSpeed = 720f;
-    [HideInInspector] public float angularAcceleration = 20f;
+    public float angularSpeed = 60f;
+    public float maxAngularSpeed = 80f;
+    public float angularAcceleration = 20f;
     float currentAngularSpeed;
     Vector3 rotationTargetLookAtPosition;
+    Vector3 rotationTargetDirection;
+    public float rotationTargetCooldown = 0.2f;
+    float timeSinceNewRotationTarget;
+    float deltaAngleTarget;
 
     public enum State { Idle, Chasing, Attacking };
     State currentState;
@@ -34,12 +40,11 @@ public class Enemy: MonoBehaviour {
     bool hasTarget;
     List<Vector3> forces = new List<Vector3>();
 
-    public float rotationTargetCooldown = 0.2f;
-    float timeSinceNewRotationTarget;
+
 
     void Awake() {
         pathfinder = GetComponent<NavMeshAgent>();
-        pathfinder.updateRotation = false;
+        //pathfinder.updateRotation = false;
 
         if( GameObject.FindGameObjectWithTag( "Player" ) != null ) {
             target = GameObject.FindGameObjectWithTag( "Player" ).transform;
@@ -154,37 +159,57 @@ public class Enemy: MonoBehaviour {
 
                 pathfinder.speed = moveSpeed * Mathf.Max( 1f, forceOffset.magnitude );
 
-                float angularSpeed;
                 if( position != target.position ) {
                     //angularSpeed = 55f;
-                    angularSpeed = this.angularSpeed;
                     pathfinder.acceleration = acceleration * 2f;
                 }
                 else {
-                    angularSpeed = this.angularSpeed;
                     pathfinder.acceleration = acceleration;
                 }
 
                 pathfinder.SetDestination( position );
 
-                Vector3 wishRotationDirection;
-                timeSinceNewRotationTarget += Time.deltaTime;
-                if( timeSinceNewRotationTarget >= rotationTargetCooldown ) {
-                    rotationTargetLookAtPosition = target.position;
-                    wishRotationDirection = wishDirection;
-                    timeSinceNewRotationTarget = 0f;
-                }
-                else {
-                    wishRotationDirection = ( rotationTargetLookAtPosition - transform.position ).normalized;
-                    //currentAngularSpeed += angularAcceleration * Time.deltaTime;
-                }
-                currentAngularSpeed = this.angularSpeed;
-                transform.rotation = Quaternion.RotateTowards(
-                    transform.rotation,
-                    Quaternion.LookRotation( wishRotationDirection, Vector3.up ),
-                    currentAngularSpeed * Time.deltaTime
-                );
+                //Vector3 wishRotationDirection;
+                //timeSinceNewRotationTarget += Time.deltaTime;
+                //if( timeSinceNewRotationTarget >= rotationTargetCooldown ) {
+                //    rotationTargetLookAtPosition = target.position;
+                //    //wishRotationDirection = wishDirection;
+                //    timeSinceNewRotationTarget = 0;
+                //}
+                //else {
+                //    //wishRotationDirection = (rotationTargetLookAtPosition - transform.position).normalized;
+                //}
 
+                //// temp
+                //currentAngularSpeed = this.angularSpeed;
+                //wishRotationDirection = wishDirection;
+
+                //// Angular acceleration
+                //Quaternion targetRotation = Quaternion.LookRotation( wishDirection, Vector3.up );
+                //float deltaAngleTarget = Mathf.DeltaAngle( transform.rotation.eulerAngles.y, targetRotation.eulerAngles.y );
+                //if( deltaAngleTarget > 0 ) {
+                //    if( this.deltaAngleTarget >= 0 ) {
+                //        currentAngularSpeed += angularAcceleration * Time.deltaTime;
+                //    }
+                //    else if( this.deltaAngleTarget < 0 ) {
+                //        currentAngularSpeed = this.angularSpeed;
+                //    }
+                //}
+                //else if( deltaAngleTarget < 0 ) {
+                //    if( this.deltaAngleTarget <= 0 ) {
+                //        currentAngularSpeed += angularAcceleration * Time.deltaTime;
+                //    }
+                //    else if( this.deltaAngleTarget > 0 ) {
+                //        currentAngularSpeed = this.angularSpeed;
+                //    }
+                //}
+                //else {
+                //    currentAngularSpeed = this.angularSpeed;
+                //}
+                //currentAngularSpeed = Mathf.Min( maxAngularSpeed, currentAngularSpeed );
+                //this.deltaAngleTarget = deltaAngleTarget;
+
+                //transform.rotation = Quaternion.RotateTowards( transform.rotation, targetRotation, currentAngularSpeed * Time.deltaTime );
             }
 
             yield return null;
